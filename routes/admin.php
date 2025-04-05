@@ -2,12 +2,16 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\OwnersController;
 use PHPUnit\Architecture\Services\ServiceContainer;
 
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::resource('owners', OwnersController::class)
+->middleware(['auth:admins', 'verified']);
 
 Route::get('/dashboard', function () {
     return view('dashboard');

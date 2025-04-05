@@ -1,4 +1,4 @@
-2025/4/5
+2025/4/5--------------------------------------
 ログイン画面でリダイレクトバグ発生
 事象：パスワードを入力してもdashboardに移行せず、login画面にリダイレクトされる
 owner,adminではログインできないが、userではdashboardにログイン可能
@@ -10,3 +10,65 @@ route/owner.phpの14行目、Route::middlwareメソッドを修正すること�
 
 修正後
 14 | Route::middleware('auth:owner')->group(function () {　});
+
+----------------------------------------------
+
+
+
+2025/4/6--------------------------------------
+
+AdminDashboardに新たにナビゲーションを制作し、ルートを作成。
+オーナ一覧画面が正しく表示されない。
+
+Exception:Call to undefined method App\Http\Controllers\Admin\OwnersController::middleware()
+
+
+
+1. OwnersController.phpのクラスを確認（済）
+  Laravel のコントローラーでミドルウェアを使用する場合、Controller クラスが
+  Illuminate\Routing\Controller を継承している必要がある。
+  OwnersController が正しいクラスを継承しているか確認。
+
+  class OwnersController extends Controller
+
+
+2. OwnersController.phpの$this->middleware() コードが正しいか確認。（済）
+
+    public function __construct()
+    {
+      $this->middleware('auth:admins');
+    }
+
+
+3. ミドルウェアが正しく動作しているか確認。（済）
+
+  public function __construct()
+  {
+    dd('ミドルウェアが適用されました');
+    $this->middleware('auth:admins');
+  }
+
+  dd()のヘルパ関数で問題なく表示される
+
+
+4. キャッシュクリアコマンドを実施（済）
+
+  php artisan config:clear
+  php artisan cache:clear
+  php artisan route:clear
+
+
+5.Http/Controllers/Controller.phpの継承を確認（解決）
+  namespace App\Http\Controllers;
+  
+  use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+  use Illuminate\Foundation\Bus\DispatchesJobs;
+  use Illuminate\Foundation\Validation\ValidatesRequests;
+  use Illuminate\Routing\Controller as BaseController;
+  
+  class Controller extends BaseController
+  {
+   use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+  }
+ 
+----------------------------------------------
