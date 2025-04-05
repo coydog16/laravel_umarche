@@ -12,8 +12,7 @@
                     <div class="container px-5 py-5 mx-auto">
                         <x-flash-message status="info" />
                         <div class="mx-auto lg:w-2/3 flex justify-end mb-4">
-                            <button
-                                onclick="location.href='{{ route('admin.owners.create') }}'"
+                            <button onclick="location.href='{{ route('admin.owners.create') }}'"
                                 class="text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg">新規登録</button>
                         </div>
                         <div class="lg:w-2/3 w-full mx-auto overflow-auto">
@@ -41,7 +40,8 @@
                                             <td class="px-4 py-3">{{ $owner->email }}</td>
                                             <td class="px-4 py-3">{{ $owner->created_at->diffForHumans() }}</td>
                                             <td class="w-10 text-center">
-                                                <input name="plan" type="radio">
+                                                <button onclick="location.href='{{ route('admin.owners.edit', ['owner' => $owner->id]) }}'" type="submit"
+                                                class="text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg">編集する</button>
                                             </td>
                                         </tr>
                                     @endforeach
