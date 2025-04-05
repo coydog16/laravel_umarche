@@ -4,7 +4,7 @@
 
     <form method="POST" action="{{ route('owner.login') }}">
         @csrf
-
+        オーナー用
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" />

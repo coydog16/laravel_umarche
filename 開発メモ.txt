@@ -3,18 +3,10 @@
 事象：パスワードを入力してもdashboardに移行せず、login画面にリダイレクトされる
 owner,adminではログインできないが、userではdashboardにログイン可能
 
-route/owner.phpのRoute::middlwareメソッドを修正することで解決。
+route/owner.phpの14行目、Route::middlwareメソッドを修正することで解決。
 
 修正前
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+14 | Route::middleware('auth')->group(function () {　});
 
 修正後
-Route::middleware('auth:owner')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+14 | Route::middleware('auth:owner')->group(function () {　});

@@ -7,9 +7,12 @@ return [
     | Application Name
     |--------------------------------------------------------------------------
     |
-    | This value is the name of your application, which will be used when the
-    | framework needs to place the application's name in a notification or
-    | other UI elements where an application name needs to be displayed.
+    | この値はアプリケーションの名前です。
+    | フレームワークがアプリケーションの名前を通知や
+    | その他のUI要素にアプリケーション名を表示する必要があるときに使われます。
+    | 'name'キーにenv()関数で指定した値を割り当てています。
+    | env()のヘルパ関数を使い、引数1に値が無ければ引数2を利用します。
+    | env関数は、環境変数として.envファイルに記述された値をコード上から参照する時に使えます。
     |
     */
 
