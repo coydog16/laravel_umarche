@@ -132,4 +132,16 @@ Collectionのテストコードを記載したところ、/admin/owners/Indexの
 URLを/admin/ownersに、記載ミス2点修正で解決したが/admin/owners/indexはviewが設定されていないのか真っ白のまま
 RouteかControllerの追加設定が必要かも？
 
+◆Error
+create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
+
+  1.親要素に別のCSSが機能しているか確認。
+    Chromeの検証モードで中身をチェックするも、それらしいCSSなし。
+　  layouts/app.blade.phpの中身までチェックするがそれらしいCSSなし。
+
+  2.キャッシュクリア
+    cmdでキャッシュクリアコマンドを実行し解決
+      php artisan cache:clear
+      php artisan view:clear
+
 ----------------------------------------------
