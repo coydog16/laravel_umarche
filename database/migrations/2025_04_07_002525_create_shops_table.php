@@ -10,10 +10,14 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
+    // SchemaモデルのBlueprintを利用してSQLにデータを挿入する。
     {
         Schema::create('shops', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('owner_id')->constrained();
+            $table->foreignId('owner_id')
+            ->constrained()
+            ->onUpdate('cascade')
+            ->onDelete('cascade');
             $table->string('name');
             $table->text('infomation');
             $table->string('filename');

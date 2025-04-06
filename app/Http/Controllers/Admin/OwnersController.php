@@ -4,11 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use App\Models\Owner; // Eloquent　エロクアント
+use App\Models\Shop;
 use Illuminate\Support\Facades\DB; // QueryBuilder　クエリビルダー
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Throwable;
+
+
 
 class OwnersController extends Controller
 {
@@ -43,7 +48,7 @@ class OwnersController extends Controller
         // dd('ddテスト'); 
 
         $owners = Owner::select('id', 'name', 'email', 'created_at')
-        ->paginate(3);
+            ->paginate(3);
 
         return view(
             'admin.owners.index',
@@ -73,11 +78,27 @@ class OwnersController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        Owner::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            DB::Transaction(function () use ($request) {
+
+                $owner = Owner::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                ]);
+
+                Shop::create([
+                    'owner_id' => $owner->id,
+                    'name' => '店名を入力してください。',
+                    'infomation' => '',
+                    'filename' => '',
+                    'is_selling' => true,
+                ]);
+            }, 2);
+        } catch (Throwable $e) {
+            Log::error($e);
+            throw $e;
+        }
 
         return redirect()
             ->route('admin.owners.index')
@@ -148,7 +169,7 @@ class OwnersController extends Controller
     {
         Owner::onlyTrashed()->findOrFail($id)->forceDelete();
         return redirect()
-        ->route('admin.expired-owners.index')
-        ->with(['message' => 'オーナーを情報を完全に削除しました。', 'status' => 'alert']);
+            ->route('admin.expired-owners.index')
+            ->with(['message' => 'オーナーを情報を完全に削除しました。', 'status' => 'alert']);
     }
 }
