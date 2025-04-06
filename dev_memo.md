@@ -130,7 +130,7 @@ Collectionのテストコードを記載したところ、/admin/owners/Indexの
     ※Illminate（×）Illuminate（〇）
 
 URLを/admin/ownersに、記載ミス2点修正で解決したが/admin/owners/indexはviewが設定されていないのか真っ白のまま
-RouteかControllerの追加設定が必要かも？
+RouteかControllerの追加設定が必要かも？（IndexRouteのリダイレクトを明示し解決）
 
 ◆Error
 create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
@@ -143,5 +143,19 @@ create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
     cmdでキャッシュクリアコマンドを実行し解決
       php artisan cache:clear
       php artisan view:clear
+
+----------------------------------------------
+
+2025/4/7--------------------------------------
+
+◆Error
+Adminでログアウトすると404エラー
+admin.phpのadmin.welcomeをコメントアウトしたため、ログアウト後のリダイレクト先がNotFound。
+
+1.destroyメソッドのリダイレクト先を編集（解決）
+
+  app/Http/Controllers/Admin/Auth/AuthenticatedSessionController.php内のdestroyメソッドにおけるリダイレクト先を管理者(admin)のログイン画面に。
+
+
 
 ----------------------------------------------
