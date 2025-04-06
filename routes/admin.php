@@ -6,13 +6,13 @@ use App\Http\Controllers\Admin\OwnersController;
 use PHPUnit\Architecture\Services\ServiceContainer;
 
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 Route::redirect('/owners/index', '/admin/owners');
 Route::resource('owners', OwnersController::class)
-->middleware(['auth:admins', 'verified']);
+->middleware(['auth:admins', 'verified'])->except(['show']);
 
 Route::prefix('expired-owners')->
     middleware('auth:admins')->group(function(){
