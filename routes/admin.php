@@ -10,6 +10,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::redirect('/owners/index', '/admin/owners');
 Route::resource('owners', OwnersController::class)
 ->middleware(['auth:admins', 'verified']);
 
