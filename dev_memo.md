@@ -157,5 +157,43 @@ admin.phpのadmin.welcomeをコメントアウトしたため、ログアウト�
   app/Http/Controllers/Admin/Auth/AuthenticatedSessionController.php内のdestroyメソッドにおけるリダイレクト先を管理者(admin)のログイン画面に。
 
 
+◆Accident
+phpMyAdminの起動のためにXamppContorllerのAdminボタンが使えなかったことが地味にストレスだったため、
+何とかならんかと色々調べてXamppのxampp-controll.iniを編集したらphpMyAdminが読み込まれなくなる。
+ロードが終わらずいつまで待ってもviewが表示されず、120sec待機状態だったためのエラーが発生。
+laravelとブラウザのキャッシュクリアやPCの再起動を試してみるも解決せず。
 
+1.migrateコマンドでデータベース接続を確認
+  php artisan migrateでデータベース接続に問題がないことを確認。
+  Larabel側ではなさそう。
+
+2.xampp-controll.iniの編集個所を復元
+　MySQLのAdminボタンのリンクはApatchのポートに依存するらしいので、ServicePortsの値を8888に編集した箇所を80に書き直す。
+
+  [ServicePorts]
+　Apache=8888 => 80
+　MySQL=3306
+
+　最初に編集した時と同様に管理者権限で起動したtxtファイルで上書き保存。
+  文字コードUTF-8、ANSIも試したが事象改善せず。
+
+3.C:ドライブにxamppをインストールしてきてControll.iniを差し替える
+  実施し再起動後に確認するも解決せず。
+  中身を確認したら全然違っていてそりゃダメだわ。
+
+4.Xampp再インストール
+  根こそぎ方法論。腐ったミカンは箱ごと入れ替える。
+  実施して起動してみたところ、今度はApatchもMySQLもStartできなくなる。
+  原因はApatchとMySQLの環境変数が前のディレクトリに残っていたこと。
+  以前は「E:ProgramFiles/Xampp/」にインストールしていたが、今回は「E:Xampp」とドライブ直下に。
+  これによりサービスの環境変数が前のパスに残ってしまい、新規でインストールしたXammppが不具合を起こしていた模様。
+  　※レジストリエディターでAmatch、MySQLそれぞれのサービスパスを設定しなおして解決
+
+  さらに本プロジェクトのデータベースをバックアップし忘れていたため、データベース接続エラー。
+  php artisa migrateはおろか、php artisan cache:clearも効かない
+  データベースに関わるコマンドが壊れている模様。
+  　※以前使っていたlaravel_umarcheテーブルを削除
+  　　新規作成し、マイグレートを実施して解決。こういう時にSeederは本当に便利。
+
+　開発中に環境は弄るもんじゃないということを学んだアクシデントだった。
 ----------------------------------------------
