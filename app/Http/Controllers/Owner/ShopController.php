@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use App\Http\Requests\UploadImageRequest;
+use App\Services\ImageService;
 
 class ShopController extends Controller
 {
@@ -58,18 +59,7 @@ class ShopController extends Controller
         $imageFile = $request->image;
         // 画像の名前がnullでない、かつisValid()でバリデーションを通過すれば画像を保存
         if (!is_null($imageFile) && $imageFile->isValid()) {
-            // ImageManager を初期化
-            $manager = new ImageManager(new Driver()); // ドライバを指定（'gd' または 'imagick'）
-            $fileName = uniqid(rand() . '_');// ランダムファイル名を生成
-            $extension = $imageFile->extension();// 拡張子を取得
-            $fileNameToStore = $fileName . '.' . $extension;// ファイル名と拡張子をつなげる
-            $resizedImage = $manager->read($imageFile)->resize(1920, 1080)->encode();// 画像をリサイズ
-            //dd($imageFile, $resizedImage);
-
-            Storage::disk('public')->put('shops/' . $fileNameToStore, $resizedImage);// 画像を保存
-
-            // 画像を保存
-            //Storage::disk('public')->putFile('shops', $imageFile);
+            $fileNameToStore = ImageService::upload($imageFile, 'shops');
         }
 
         return redirect()->route('owner.shops.index');
