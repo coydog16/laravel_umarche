@@ -123,8 +123,10 @@ Collectionのテストコードを記載したところ、/admin/owners/Indexの
     記載ミス発覚
     ※Illminate（×）Illuminate（〇）
 
-URLを/admin/ownersに、記載ミス2点修正で解決したが/admin/owners/indexはviewが設定されていないのか真っ白のまま
-RouteかControllerの追加設定が必要かも？（IndexRouteのリダイレクトを明示し解決）
+  URLを/admin/ownersに、記載ミス2点修正で解決したが/admin/owners/indexはviewが設定されていないのか真っ白のまま
+  RouteかControllerの追加設定が必要かも？（IndexRouteのリダイレクトを明示し解決）
+
+◆解決
 
 ◆Error
 create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
@@ -139,6 +141,8 @@ create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
     cmdでキャッシュクリアコマンドを実行し解決
       php artisan cache:clear
       php artisan view:clear
+
+◆解決
 
 ----------------------------------------------
 
@@ -191,6 +195,9 @@ laravelとブラウザのキャッシュクリアやPCの再起動を試して�
   　　新規作成し、マイグレートを実施して解決。こういう時にSeederは本当に便利。
 
 　開発中に環境は弄るもんじゃないということを学んだアクシデントだった。
+
+◆解決
+
 
 ◆Error
 shop/editでショップ画像が正しくアップロードされず、storage/publicにフォルダが作成されない
@@ -344,7 +351,7 @@ shop/editでショップ画像が正しくアップロードされず、storage/
   dd　"shops/l7exljAbzYzPHb6BIzjnyRdOMvSmGQocmHlIqY0z.jpg" // app\Http\Controllers\Owner\ShopController.php:75
   無事にパスが通り、ディレクトリも作成された。
 
-  解決！
+◆解決！
 
 ----------------------------------------------
 
@@ -400,5 +407,70 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
         public ImageManager::read(mixed $input, string|array|DecoderInterface $decoders = []): ImageInterface
 
         With a configured Image Manager it is possible to read images from different sources. The method not only accepts paths from file systems, but also binary image data, Base64-encoded image data or images in Data Uri format. It is also possible to pass a range of objects and PHP resources as input. A complete list can be found below.
-    
+
+    正しくリサイズされてエンコードも出来ている。
+
+◆解決！
+
+
+◆Error：Shopサムネイルが表示されない。
+店舗情報を更新したところ、owner/shops/indexにリダイレクト後に壊れた画像ファイルの表示になりサムネイルが表示されない。
+
+  1.試したこと
+    ・データベースに登録があることを確認。
+    ・filenameテーブルに自動生成した名前で登録できている。57309063_67f44abb00230.jpg
+    ・dd()でShopControllerでfilenameを取得できていることを確認。
+      コード：
+        dd($shop->filename)
+      結果：
+        "273467030_67f44c465eafb.jpg" // app\Http\Controllers\Owner\ShopController.php:77
+
+  　となると怪しいのはshop-thumbnailコンポーネントか。上手く変数を渡せていないかも。
+
+  2.shop-thombnailコンポーネントを確認
+    shops/index.blade.phpでコンポーネントの変数を確認。
+    Blade側で「:属性="変数名"」で指定し、Bladeコンポーネントで「{{ $属性名 }}」で指定する。
+    記述の仕方に問題はなさそう。
+
+      Blade.php
+        <x-shop-thumbnail :filename="$shop->filename" />
+      shop-thumbnail.blade.php
+        <img src="{{ asset('storage/shops/' . $filename) }}">
+
+  3.シンボリックリンクの再作成
+  storageとpublicのリンクを確認。
+    コマンド：php artisan storage:link
+    結果：ERROR The [E:\xampp\htdocs\laravel\umarche\public\storage] link already exists.
+  
+  既にリンクが作成されているらしい。
+  publicの状態を確認
+    コマンド：dir public
+
+    結果：
+        Volume in drive E is ボリューム
+        Volume Serial Number is E61D-1EDE
+      2025/04/07  20:33    <DIR>          .
+      2025/04/07  20:33    <DIR>          ..
+      2025/01/24  12:55               740 .htaccess
+      2025/04/07  10:11    <DIR>          build
+      2025/01/24  12:55                 0 favicon.ico
+      2025/04/07  20:33                17 hot
+      2025/04/07  21:06    <DIR>          images
+      2025/04/06  02:57             1,675 index.php
+      2025/01/24  12:55                24 robots.txt
+      2025/04/05  17:00    <DIR>          storage
+                    5 File(s)          2,456 bytes
+                    5 Dir(s)  583,660,560,384 bytes free
+
+  storageが<JUNCTION>になっていないので削除して再作成
+    コマンド：
+    rmdir public\storage
+    dir public
+
+    結果：2025/04/08  07:35    <JUNCTION>     storage [E:\xampp\htdocs\laravel\umarche\storage\app\public]
+
+  シンボリックリンクが正しく通って画像が表示されるようになった。
+
+◆解決！
+
 ----------------------------------------------

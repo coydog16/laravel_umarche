@@ -9,6 +9,8 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                    {{-- フラッシュメッセージ --}}
+                    <x-flash-message status="session('status')" />
                     {{-- ショップIDを取得しviewへ渡す --}}
                     @foreach ($shops as $shop)
                         <div class="w-1/2 p-4">
@@ -25,11 +27,7 @@
                                             {{ $shop->name }}
                                         </div>
                                         {{-- ショップの画像が設定されているかを判定 --}}
-                                        @if (empty($shop->filename))
-                                            <img src="{{ asset('images/no_image.jpg') }}">
-                                        @else
-                                            <imge src="{{ asset('storage/shops/' . $shop->filename) }}">
-                                        @endif
+                                        <x-shop-thumbnail :filename="$shop->filename" />
                                     </div>
                                 </div>
                             </a>
