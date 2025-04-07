@@ -59,15 +59,16 @@ class ShopController extends Controller
         if (!is_null($imageFile) && $imageFile->isValid()) {
             // ImageManager を初期化
             $manager = new ImageManager(new Driver()); // ドライバを指定（'gd' または 'imagick'）
-    
-            // 画像をリサイズ
-            $resizedImage = $manager->read($imageFile)->resize(1920, 1080)->encode();
-    
-            // ファイル名を生成
-            $fileName = uniqid(rand() . '_') . '.' . $imageFile->getClientOriginalExtension();
-    
+            $fileName = uniqid(rand() . '_');// ランダムファイル名を生成
+            $extension = $imageFile->extension();// 拡張子を取得
+            $fileNameToStore = $fileName . '.' . $extension;// ファイル名と拡張子をつなげる
+            $resizedImage = $manager->read($imageFile)->resize(1920, 1080)->encode();// 画像をリサイズ
+            //dd($imageFile, $resizedImage);
+
+            Storage::disk('public')->put('shops/' . $fileNameToStore, $resizedImage);// 画像を保存
+
             // 画像を保存
-            Storage::disk('public')->putFile('shops', $imageFile);
+            //Storage::disk('public')->putFile('shops', $imageFile);
         }
 
         return redirect()->route('owner.shops.index');
