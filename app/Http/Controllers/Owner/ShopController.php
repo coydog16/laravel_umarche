@@ -7,6 +7,8 @@ use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class ShopController extends Controller
 {
@@ -55,7 +57,16 @@ class ShopController extends Controller
         $imageFile = $request->image;
         // 画像の名前がnullでない、かつisValid()でバリデーションを通過すれば画像を保存
         if (!is_null($imageFile) && $imageFile->isValid()) {
-            //storage/app/public/shopsディレクトリへ画像を自動で名前を付けて保存。ディレクトリが無ければ自動生成。
+            // ImageManager を初期化
+            $manager = new ImageManager(new Driver()); // ドライバを指定（'gd' または 'imagick'）
+    
+            // 画像をリサイズ
+            $resizedImage = $manager->read($imageFile)->resize(1920, 1080)->encode();
+    
+            // ファイル名を生成
+            $fileName = uniqid(rand() . '_') . '.' . $imageFile->getClientOriginalExtension();
+    
+            // 画像を保存
             Storage::disk('public')->putFile('shops', $imageFile);
         }
 

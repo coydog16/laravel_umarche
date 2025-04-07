@@ -347,3 +347,58 @@ shop/editでショップ画像が正しくアップロードされず、storage/
   解決！
 
 ----------------------------------------------
+
+2025/4/8--------------------------------------
+◆Error
+InterventionImageを利用し画像のリサイズと圧縮を試みるも上手く導入できず。
+
+メッセージ：Class "Intervention\Image\ImageServiceProvider" not found
+
+よくよく調べてみるとLaravelとInterventionImageのverの問題で導入方法がかなり変わっているよう。
+
+  1.試したこと
+    ・Intervention Image のインストール確認（問題なし）
+    ・オートローダーを再生成（エラー：Class "Intervention\Image\ImageServiceProvider" not found）
+    ・キャッシュのクリア
+    ・Intervention Image のクラス名を確認
+    ・Composerのバージョンロック
+    ・php.iniの設定ファイル書き換え
+
+
+  結果：
+    Laravel10以前はapp.phpでProviderを管理していたが、Laravel11ではServiceProviderはapp/bootstrap/providersに登録されていてapp.phpは触らないように仕様変更された。
+    InterventionImage2まではServiceProviderを利用していたが、InterventionImage3になってからはインスタンス化して使うように仕様変更があった。
+    ちなみにLaravel11とInterventionImage2に互換性はない。
+    あれこれ試して色々調べて、ここまで来るのに5時間ぐらいかかった……。
+
+  2.今回は素直にインスタンス化して使う
+    何度も同じコードを書くことになるとプロバイダとして登録する方が望ましいけども、今回はテストだしインスタンス化して使うことに決定。
+
+    ◆Error：GD PHP extension must be installed to use this driver.
+      ドライバが正しく読み込まれていない。
+      デフォルトでImagickを使う仕様になっているのでGdに書き換え
+
+      参考：https://image.intervention.io/v3/introduction/installation
+ 
+        use Intervention\Image\Drivers\Imagick\Driver;
+        ↓
+        use Intervention\Image\Drivers\Gd\Driver;
+
+
+    ◆Error：Call to undefined method Intervention\Image\ImageManager::make()
+      Intervention\Image\ImageManagerにmakeメソッドが見つからない。
+      画像読み込みはreadメソッドになってるっぽい？
+      read()を使用したら正常にリダイレクトするようになった。
+
+      $manager = new ImageManager(new Driver());
+      $manager->read($imageFile)->resize(1920, 1080)->encode();
+
+      参考：https://image.intervention.io/v3/basics/instantiation#read-image-sources
+
+        Read Image Sources
+
+        public ImageManager::read(mixed $input, string|array|DecoderInterface $decoders = []): ImageInterface
+
+        With a configured Image Manager it is possible to read images from different sources. The method not only accepts paths from file systems, but also binary image data, Base64-encoded image data or images in Data Uri format. It is also possible to pass a range of objects and PHP resources as input. A complete list can be found below.
+    
+----------------------------------------------
