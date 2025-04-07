@@ -2,19 +2,17 @@
 ◆Error
 ログイン画面でリダイレクトバグ発生
 事象：パスワードを入力してもdashboardに移行せず、login画面にリダイレクトされる
-owner,adminではログインできないが、userではdashboardにログイン可能
+owner, adminではログインできないが、userではdashboardにログイン可能
 
 route/owner.phpの14行目、Route::middlwareメソッドを修正することで解決。
 
 修正前
-14 | Route::middleware('auth')->group(function () {　});
+14 | Route::middleware('auth')->group(function () {　}); 
 
 修正後
-14 | Route::middleware('auth:owner')->group(function () {　});
+14 | Route::middleware('auth:owner')->group(function () {　}); 
 
 ----------------------------------------------
-
-
 
 2025/4/6--------------------------------------
 
@@ -22,9 +20,7 @@ route/owner.phpの14行目、Route::middlwareメソッドを修正すること�
 AdminDashboardに新たにナビゲーションを制作し、ルートを作成。
 オーナ一覧画面が正しく表示されない。
 
-Exception:Call to undefined method App\Http\Controllers\Admin\OwnersController::middleware()
-
-
+Exception: Call to undefined method App\Http\Controllers\Admin\OwnersController::middleware()
 
 1. OwnersController.phpのクラスを確認（済）
   Laravel のコントローラーでミドルウェアを使用する場合、Controller クラスが
@@ -33,25 +29,23 @@ Exception:Call to undefined method App\Http\Controllers\Admin\OwnersController::
 
   class OwnersController extends Controller
 
-
 2. OwnersController.phpの$this->middleware() コードが正しいか確認。（済）
-
     public function __construct()
     {
       $this->middleware('auth:admins');
     }
 
-
 3. ミドルウェアが正しく動作しているか確認。（済）
 
   public function __construct()
   {
+
     dd('ミドルウェアが適用されました');
     $this->middleware('auth:admins');
+
   }
 
   dd()のヘルパ関数で問題なく表示される
-
 
 4. キャッシュクリアコマンドを実施（済）
 
@@ -59,18 +53,17 @@ Exception:Call to undefined method App\Http\Controllers\Admin\OwnersController::
   php artisan cache:clear
   php artisan route:clear
 
-
-5.Http/Controllers/Controller.phpの継承を確認（解決）
-  namespace App\Http\Controllers;
+5. Http/Controllers/Controller.phpの継承を確認（解決）
+  namespace App\Http\Controllers; 
   
-  use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-  use Illuminate\Foundation\Bus\DispatchesJobs;
-  use Illuminate\Foundation\Validation\ValidatesRequests;
-  use Illuminate\Routing\Controller as BaseController;
+  use Illuminate\Foundation\Auth\Access\AuthorizesRequests; 
+  use Illuminate\Foundation\Bus\DispatchesJobs; 
+  use Illuminate\Foundation\Validation\ValidatesRequests; 
+  use Illuminate\Routing\Controller as BaseController; 
   
   class Controller extends BaseController
   {
-   use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+   use AuthorizesRequests, DispatchesJobs, ValidatesRequests; 
   }
  
 
@@ -86,17 +79,18 @@ SQLSTATE[42S02]: Base table or view not found: 1146 Table 'laravel_umarche.admin
 createメソッドの引数がownersになっていることを確認。修正し解決。
 
 修正前
+
         if (!Schema::hasTable('owners')) {
             Schema::create('ownser', function (Blueprint $table) {
             })
         }
 
 修正後
+
         if (!Schema::hasTable('admins')) {
             Schema::create('admins', function (Blueprint $table) {
             })
         }
-
 
 ◆Error
 Collectionのテストコードを記載したところ、/admin/owners/Indexのviewが真っ白で何も表示されなくなった
@@ -116,10 +110,10 @@ Collectionのテストコードを記載したところ、/admin/owners/Indexの
 
   ======
 
-  1.書いたコードをコメントアウトし、dd()でテスト（済）
+  1. 書いたコードをコメントアウトし、dd()でテスト（済）
     問題なく表示される
 
-  2.Indexではなく、DashboardのRouteからジャンプ（解決）
+  2. Indexではなく、DashboardのRouteからジャンプ（解決）
     
     Exception:class "APP\Models\Owner;" not found
     記載ミス発覚
@@ -135,11 +129,13 @@ RouteかControllerの追加設定が必要かも？（IndexRouteのリダイレ�
 ◆Error
 create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
 
-  1.親要素に別のCSSが機能しているか確認。
+  1. 親要素に別のCSSが機能しているか確認。
     Chromeの検証モードで中身をチェックするも、それらしいCSSなし。
+
 　  layouts/app.blade.phpの中身までチェックするがそれらしいCSSなし。
 
   2.キャッシュクリア
+
     cmdでキャッシュクリアコマンドを実行し解決
       php artisan cache:clear
       php artisan view:clear
@@ -155,7 +151,6 @@ admin.phpのadmin.welcomeをコメントアウトしたため、ログアウト�
 1.destroyメソッドのリダイレクト先を編集（解決）
 
   app/Http/Controllers/Admin/Auth/AuthenticatedSessionController.php内のdestroyメソッドにおけるリダイレクト先を管理者(admin)のログイン画面に。
-
 
 ◆Accident
 phpMyAdminの起動のためにXamppContorllerのAdminボタンが使えなかったことが地味にストレスだったため、
@@ -177,15 +172,15 @@ laravelとブラウザのキャッシュクリアやPCの再起動を試して�
 　最初に編集した時と同様に管理者権限で起動したtxtファイルで上書き保存。
   文字コードUTF-8、ANSIも試したが事象改善せず。
 
-3.C:ドライブにxamppをインストールしてきてControll.iniを差し替える
+3. C:ドライブにxamppをインストールしてきてControll.iniを差し替える
   実施し再起動後に確認するも解決せず。
   中身を確認したら全然違っていてそりゃダメだわ。
 
-4.Xampp再インストール
+4. Xampp再インストール
   根こそぎ方法論。腐ったミカンは箱ごと入れ替える。
   実施して起動してみたところ、今度はApatchもMySQLもStartできなくなる。
   原因はApatchとMySQLの環境変数が前のディレクトリに残っていたこと。
-  以前は「E:ProgramFiles/Xampp/」にインストールしていたが、今回は「E:Xampp」とドライブ直下に。
+  以前は「E: ProgramFiles/Xampp/」にインストールしていたが、今回は「E: Xampp」とドライブ直下に。
   これによりサービスの環境変数が前のパスに残ってしまい、新規でインストールしたXammppが不具合を起こしていた模様。
   　※レジストリエディターでAmatch、MySQLそれぞれのサービスパスを設定しなおして解決
 
@@ -196,4 +191,159 @@ laravelとブラウザのキャッシュクリアやPCの再起動を試して�
   　　新規作成し、マイグレートを実施して解決。こういう時にSeederは本当に便利。
 
 　開発中に環境は弄るもんじゃないということを学んだアクシデントだった。
+
+◆Error
+shop/editでショップ画像が正しくアップロードされず、storage/publicにフォルダが作成されない
+
+1. ざっくり色々確認
+  1-1.ストレージリンク
+
+    php artisan storage:linkを実行しリンクを作成
+    ERROR  The [E:\xampp\htdocs\laravel\umarche\public\storage] link already exists.
+    既にリンクが作成されていた。
+
+  1-2.artisanコマンドでキャッシュクリア
+  1-3.windows側のディレクトリプロパティの書き込み権限の確認
+
+2. ヘルパ関数dd()でファイルが正しく送信されているかを確認。
+    if (is_null($imageFile)) {
+        dd('ファイルが送信されていません');
+    }
+
+    if (!$imageFile->isValid()) {
+        dd('無効なファイルです');
+    }
+
+結果：ddが表示されず、indexへリダイレクト。
+
+3.ファイル情報が正しく送信されているかを確認。
+
+    dd([
+        'original_name' => $imageFile->getClientOriginalName(),
+        'mime_type' => $imageFile->getMimeType(),
+        'size' => $imageFile->getSize(),
+    ]);
+
+    Storage::putFile('public/shops', $imageFile);
+
+    return redirect()->route('owner.shops.index');
+    }
+
+  ファイル情報は正しく送信されている。
+
+    array:3 [▼ // app\Http\Controllers\Owner\ShopController.php:67
+      "original_name" => "christmas-3026688_1920.jpg"
+      "mime_type" => "image/jpeg"
+      "size" => 1038401
+    ]
+
+4. $imageFileプロパティに正しく値が挿入されているかを確認
+
+  コード：
+
+    dd($imageFile);
+
+  結果：
+
+    array:2 [▼ // app\Http\Controllers\Owner\ShopController.php:56
+      "_token" => "dDiW1M85y81S2Qnk6SkwOcowtCIFm6f9vxJ2exDx"
+      "image" => 
+    Illuminate\Http
+    \
+    UploadedFile
+    {#1582 ▼
+        -originalName: "christmas-3026688_1920.jpg"
+        -mimeType: "image/jpeg"
+        -error: 0
+        -originalPath: "christmas-3026688_1920.jpg"
+        -test: false
+        #hashName: null
+        path: "E:\xampp\tmp"
+        filename: "php10F0.tmp"
+        basename: "php10F0.tmp"
+        pathname: "E:\xampp\tmp\php10F0.tmp"
+        extension: "tmp"
+        realPath: "
+    E:\xampp
+    \
+    tmp\php10F0.tmp
+    "
+        aTime: 2025-04-08 00:01:02
+        mTime: 2025-04-08 00:01:02
+        cTime: 2025-04-08 00:01:02
+        inode: 844424930525407
+        size: 1038401
+        perms: 0100666
+        owner: 0
+        group: 0
+        type: "file"
+        writable: true
+        readable: true
+        executable: false
+        file: true
+        dir: false
+        link: false
+        linkTarget: "E:\xampp\tmp\php10F0.tmp"
+      }
+    ]
+
+  filename: "php10F0.tmp"とあるので、
+  リクエストが正しく送られていることを確認
+
+5. Storage::putFile()メソッドの動作確認。
+
+  public/storageまでファイルパスが通っているか確認。
+
+  コード：
+
+    $imageFile = $request->image;
+
+    if (!is_null($imageFile) && $imageFile->isValid()) {
+        // ファイルを保存し、保存先のパスを取得
+        $filePath = Storage::putFile('public/shops', $imageFile);
+    
+        // 保存先のパスを確認
+        dd($filePath);
+    }
+
+  結果：
+
+    "public/shops/svNVz3JDciLcSkEuqovJUtfBn4JWSEaZ6btEr5Gb.jpg" // app\Http\Controllers\Owner\ShopController.php:62
+
+  ファイルのパスは通っているが、実際にはstorage/publicにshopsディレクトリが作成されていない。
+
+6. 手動でフォルダを生成してみる。
+  リクエストもファイルパスも通っているので、ディレクトリだけ自動で生成してみる。
+
+  コード：
+
+    if (!Storage::exists('public/shops')) {
+      Storage::makeDirectory('public/shops');
+    }
+
+  結果：ディレクトリが自動で作成され、ファイルが保存されるようになったが、なぜか
+  storage/app/private/public/shopsに画像が保存される。
+  privateフォルダにpublic/shopsディレクトリが階層で自動作成されている模様。
+
+  windowsGUIから手動でpublicフォルダにshopsフォルダを作成したらそっちに今までアップロードした画像が保存されていた。
+  コードも問題なく動作する。
+
+7. filesystems.phpを確認。
+  色々調べた結果、filesystems.phpのdefault設定がlocalになっていることが原因っぽい。
+  Storageモデルのdisk()関数で明示的にディスクを指定
+
+  コード：
+
+     if (!is_null($imageFile) && $imageFile->isValid()) {
+        $filePath = Storage::disk('public')->putFile('shops', $imageFile);
+     }
+
+    dd($filePath);
+
+  結果：
+  dd　"shops/l7exljAbzYzPHb6BIzjnyRdOMvSmGQocmHlIqY0z.jpg" // app\Http\Controllers\Owner\ShopController.php:75
+  無事にパスが通り、ディレクトリも作成された。
+
+  解決！
+
 ----------------------------------------------

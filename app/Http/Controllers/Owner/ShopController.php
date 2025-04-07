@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ShopController extends Controller
 {
@@ -40,8 +41,24 @@ class ShopController extends Controller
 
     public function edit(string $id)
     {
-        dd(Shop::findOrFail($id));
+        $shop = Shop::findOrFail($id);
+        // dd(Shop::findOrFail($id));
+
+        return view(('owner.shops.edit'),
+            compact('shop')
+        );
     }
 
-    public function update(Request $request, string $id) {}
+    public function update(Request $request, string $id)
+    {
+
+        $imageFile = $request->image;
+        // 画像の名前がnullでない、かつisValid()でバリデーションを通過すれば画像を保存
+        if (!is_null($imageFile) && $imageFile->isValid()) {
+            //storage/app/public/shopsディレクトリへ画像を自動で名前を付けて保存。ディレクトリが無ければ自動生成。
+            Storage::disk('public')->putFile('shops', $imageFile);
+        }
+
+        return redirect()->route('owner.shops.index');
+    }
 }
