@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Architecture\Services\ServiceContainer;
 use App\Http\Controllers\Owner\ShopController;
+use App\Http\Controllers\Owner\ImageController;
 
 
 Route::get('/', function () {
@@ -16,6 +17,9 @@ Route::prefix('shops')->
         Route::get('edit/{shop}',[ShopController::class, 'edit'])->name('shops.edit');
         Route::post('update/{shop}',[ShopController::class, 'update'])->name('shops.update');
     });
+
+Route::resource('images', ImageController::class)
+->middleware(['auth:owners', 'verified'])->except(['show']); //showは今回は作成しない
 
 Route::get('/dashboard', function () {
     return view('dashboard');
