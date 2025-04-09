@@ -12,7 +12,7 @@ class image extends Model
         'filename',
     ];
 
-    public function image()
+    public function owner()
     {
         return $this->belongsTo(Owner::class);
     }
