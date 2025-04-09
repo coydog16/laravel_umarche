@@ -23,12 +23,12 @@
                                         @else
                                             <span class="border p-2 rounded-md bg-red-400 text-white">停止中</span>
                                         @endif
-                                        <div class="text-xl my-4">
-                                            {{ $shop->name }}
-                                        </div>
-                                        {{-- ショップの画像が設定されているかを判定 --}}
-                                        <x-shop-thumbnail :filename="$shop->filename" />
                                     </div>
+                                    <div class="text-xl my-4">
+                                        {{ $shop->name }}
+                                    </div>
+                                    {{-- ショップの画像が設定されているかを判定 --}}
+                                    <x-thumbnail :filename="$shop->filename" type="shops" />
                                 </div>
                             </a>
                         </div>
