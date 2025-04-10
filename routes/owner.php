@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\Route;
 use PHPUnit\Architecture\Services\ServiceContainer;
 use App\Http\Controllers\Owner\ShopController;
 use App\Http\Controllers\Owner\ImageController;
-
+use App\Http\Controllers\Owner\ProductController;
+use App\Models\Product;
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,6 +21,9 @@ Route::prefix('shops')->
 
 Route::resource('images', ImageController::class)
 ->middleware(['auth:owners', 'verified'])->except(['show']); //showは今回は作成しない
+
+Route::resource('product', ProductController::class)
+->middleware(['auth:owners', 'verified'])->except(['show']); 
 
 Route::get('/dashboard', function () {
     return view('dashboard');
