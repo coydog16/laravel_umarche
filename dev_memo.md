@@ -474,4 +474,32 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
 ◆解決！
 
 ----------------------------------------------
+2025/4/10-------------------------------------
+
+◆Accident：縦長の画像をリサイズすると画像の縦横比が変わって伸びてしまう
+
+1.resize()ではなく、cover()を使う。
+  色々調べていると、やはりIntervention Image3.0からmakeメソッドは廃止されているよう。
+  公式ドキュメントを参照し、Cover()を利用するようにする。
+  リサイズとトリミングを同時に行ってくれる便利なメソッド。
+
+  参照：https://image.intervention.io/v3/modifying/resizing
+
+  Example Code
+  
+    use Intervention\Image\ImageManager;
+    use Intervention\Image\Drivers\Gd\Driver;
+
+    // create new image instance (800 x 600)
+    $manager = new ImageManager(Driver::class);
+    $image = $manager->read('images/example.jpg');
+
+    // crop the best fitting 5:3 (600x360) ratio and resize to 600x360 pixel
+    $img->cover(600, 360);
+
+    // crop the best fitting 1:1 ratio (200x200) and resize to 200x200 pixel
+    $img->cover(200, 200);
+
+    // cover a size of 300x300 and position crop on the left
+    $image->cover(300, 300, 'left'); // 300 x 300 px
 

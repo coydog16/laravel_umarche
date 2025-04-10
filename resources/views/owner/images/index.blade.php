@@ -18,14 +18,14 @@
                     {{-- ショップIDを取得しviewへ渡す --}}
                     <div class="flex flex-wrap">
                         @foreach ($images as $image)
-                            <div class="w-1/4 p-4">
+                            <div class="w-1/4 p-2 md:p-4">
                                 <a href="{{ route('owner.images.edit', ['image' => $image->id]) }}">
-                                    <div class="border rouded-md p-4">
-                                        <div class="text-xl my-4">
-                                            {{ $image->title }}
-                                        </div>
+                                    <div class="border rouded-md p-2 md:p-2">
                                         {{-- ショップの画像が設定されているかを判定 --}}
                                         <x-thumbnail :filename="$image->filename" type="products" />
+                                        <div class="text-gray-700 my-4">
+                                            {{ $image->title }}
+                                        </div>
                                     </div>
                                 </a>
                             </div>
