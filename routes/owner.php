@@ -22,7 +22,7 @@ Route::prefix('shops')->
 Route::resource('images', ImageController::class)
 ->middleware(['auth:owners', 'verified'])->except(['show']); //showは今回は作成しない
 
-Route::resource('product', ProductController::class)
+Route::resource('products', ProductController::class)
 ->middleware(['auth:owners', 'verified'])->except(['show']); 
 
 Route::get('/dashboard', function () {
