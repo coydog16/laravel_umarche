@@ -746,4 +746,36 @@ action="{{ route('owner.products.destroy', ['product' => $product->id]) }}">
 </form>
 ```
 
+###画像を削除する際にプロダクトに紐づいていると外部キー制約で削除できない
+
+画像を使っているか確認して、使ってる場合はproductのimage1～4をnullに変更して削除する。
+
+```php:ImageController.php
+// 画像IDを持つ商品を取得
+$imageInProducts = Product::where('image1', $image->id)
+    ->orWhere('image2', $image->id)
+    ->orWhere('image3', $image->id)
+    ->orWhere('image4', $image->id)
+    ->get();
+
+// 商品の画像参照を解除
+if ($imageInProducts->isNotEmpty()) {
+    $imageInProducts->each(function ($product) use ($image) {
+        if ($product->image1 === $image->id) {
+            $product->image1 = null;
+        }
+        if ($product->image2 === $image->id) {
+            $product->image2 = null;
+        }
+        if ($product->image3 === $image->id) {
+            $product->image3 = null;
+        }
+        if ($product->image4 === $image->id) {
+            $product->image4 = null;
+        }
+        $product->save();
+    });
+}
+```
+
 ----------------------------------------------

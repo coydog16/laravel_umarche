@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Image;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\UploadImageRequest;
 use App\Services\ImageService;
@@ -115,13 +116,42 @@ class ImageController extends Controller
      */
     public function destroy(string $id)
     {
-        $image = Image::findOrFail($id);
+        $image = Image::findOrFail($id); // IDを指定して画像を取得
+
+        // 画像IDを持つ商品を取得
+        $imageInProducts = Product::where('image1', $image->id)
+            ->orWhere('image2', $image->id)
+            ->orWhere('image3', $image->id)
+            ->orWhere('image4', $image->id)
+            ->get();
+
+        // 商品の画像参照を解除
+        if ($imageInProducts->isNotEmpty()) {
+            $imageInProducts->each(function ($product) use ($image) {
+                if ($product->image1 === $image->id) {
+                    $product->image1 = null;
+                }
+                if ($product->image2 === $image->id) {
+                    $product->image2 = null;
+                }
+                if ($product->image3 === $image->id) {
+                    $product->image3 = null;
+                }
+                if ($product->image4 === $image->id) {
+                    $product->image4 = null;
+                }
+                $product->save();
+            });
+        }
+
+        // ストレージ内のファイルを削除
         $filePath = 'products/' . $image->filename;
         if (Storage::disk('public')->exists($filePath)) {
             Storage::disk('public')->delete($filePath);
         }
 
-        Image::findOrFail($id)->delete();
+        // 画像を削除
+        $image->delete();
 
         return redirect()
             ->route('owner.images.index')
