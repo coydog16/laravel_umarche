@@ -355,97 +355,90 @@ shop/editでショップ画像が正しくアップロードされず、storage/
 ----------------------------------------------
 
 2025/4/8--------------------------------------
-###Error
+##Error
 InterventionImageを利用し画像のリサイズと圧縮を試みるも上手く導入できず。
 
 メッセージ：Class "Intervention\Image\ImageServiceProvider" not found
 
 よくよく調べてみるとLaravelとInterventionImageのverの問題で導入方法がかなり変わっているよう。
 
-  1. 試したこと
-    ・Intervention Image のインストール確認（問題なし）
-    ・オートローダーを再生成（エラー：Class "Intervention\Image\ImageServiceProvider" not found）
-    ・キャッシュのクリア
-    ・Intervention Image のクラス名を確認
-    ・Composerのバージョンロック
-    ・php.iniの設定ファイル書き換え
+###試したこと
+-Intervention Image のインストール確認（問題なし）
+-オートローダーを再生成（エラー：Class "Intervention\Image\ImageServiceProvider" not found）
+-キャッシュのクリア
+-Intervention Image のクラス名を確認
+-Composerのバージョンロック
+-php.iniの設定ファイル書き換え
 
-  結果：
+Laravel10以前はapp.phpでProviderを管理していたが、Laravel11ではServiceProviderはapp/bootstrap/providersに登録されていてapp.phpは触らないように仕様変更された。
+InterventionImage2まではServiceProviderを利用していたが、InterventionImage3になってからはインスタンス化して使うように仕様変更があった。
+ちなみにLaravel11とInterventionImage2に互換性はない。
+あれこれ試して色々調べて、ここまで来るのに5時間ぐらいかかった……。
 
-    Laravel10以前はapp.phpでProviderを管理していたが、Laravel11ではServiceProviderはapp/bootstrap/providersに登録されていてapp.phpは触らないように仕様変更された。
-    InterventionImage2まではServiceProviderを利用していたが、InterventionImage3になってからはインスタンス化して使うように仕様変更があった。
-    ちなみにLaravel11とInterventionImage2に互換性はない。
-    あれこれ試して色々調べて、ここまで来るのに5時間ぐらいかかった……。
+###今回は素直にインスタンス化して使う
+何度も同じコードを書くことになるとプロバイダとして登録する方が望ましいけども、今回はテストだしインスタンス化して使うことに決定。
 
-  2. 今回は素直にインスタンス化して使う
-    何度も同じコードを書くことになるとプロバイダとして登録する方が望ましいけども、今回はテストだしインスタンス化して使うことに決定。
+####Error：GD PHP extension must be installed to use this driver.
+ドライバが正しく読み込まれていない。
+デフォルトでImagickを使う仕様になっているのでGdに書き換え
 
-    ◆Error：GD PHP extension must be installed to use this driver.
-      ドライバが正しく読み込まれていない。
-      デフォルトでImagickを使う仕様になっているのでGdに書き換え
+参考：[InterventionImage3:導入](https://image.intervention.io/v3/introduction/installation)
 
-      参考：[InterventionImage3:導入](https://image.intervention.io/v3/introduction/installation)
+`use Intervention\Image\Drivers\Imagick\Driver;`
+↓
+`use Intervention\Image\Drivers\Gd\Driver;`
 
- 
+####Error：Call to undefined method Intervention\Image\ImageManager::make()
+Intervention\Image\ImageManagerにmakeメソッドが見つからない。
+画像読み込みはreadメソッドになってるっぽい？
+read()を使用したら正常にリダイレクトするようになった。
 
-        `use Intervention\Image\Drivers\Imagick\Driver;`
-        ↓
-        `use Intervention\Image\Drivers\Gd\Driver;`
+```php:Intervention3
+$manager = new ImageManager(new Driver());
+$manager->read($imageFile)->resize(1920, 1080)->encode();
+```
 
-    ◆Error：Call to undefined method Intervention\Image\ImageManager::make()
-      Intervention\Image\ImageManagerにmakeメソッドが見つからない。
-      画像読み込みはreadメソッドになってるっぽい？
-      read()を使用したら正常にリダイレクトするようになった。
+参考：[Intervention3#read-image-sources](https://image.intervention.io/v3/basics/instantiation#read-image-sources)
 
-      $manager = new ImageManager(new Driver());
-      $manager->read($imageFile)->resize(1920, 1080)->encode();
+>Read Image Sources
+public ImageManager::read(mixed $input, string|array|DecoderInterface $decoders = []): ImageInterface
+With a configured Image Manager it is possible to read images from different sources. The method not only accepts paths from file systems, but also binary image data, Base64-encoded image data or images in Data Uri format. It is also possible to pass a range of objects and PHP resources as input. A complete list can be found below.
 
-      参考：https://image.intervention.io/v3/basics/instantiation#read-image-sources
-
-        Read Image Sources
-
-        public ImageManager::read(mixed $input, string|array|DecoderInterface $decoders = []): ImageInterface
-
-        With a configured Image Manager it is possible to read images from different sources. The method not only accepts paths from file systems, but also binary image data, Base64-encoded image data or images in Data Uri format. It is also possible to pass a range of objects and PHP resources as input. A complete list can be found below.
-
-    正しくリサイズされてエンコードも出来ている。
+正しくリサイズされてエンコードも出来ている。
 
 ◆解決！
 
-#Error：Shopサムネイルが表示されない。
+##Error：Shopサムネイルが表示されない。
 店舗情報を更新したところ、owner/shops/indexにリダイレクト後に壊れた画像ファイルの表示になりサムネイルが表示されない。
 
-  1. 試したこと
-    ・データベースに登録があることを確認。
-    ・filenameテーブルに自動生成した名前で登録できている。57309063_67f44abb00230.jpg
-    ・dd()でShopControllerでfilenameを取得できていることを確認。
-      コード：
-        dd($shop->filename)
-      結果：
-        "273467030_67f44c465eafb.jpg" // app\Http\Controllers\Owner\ShopController.php:77
+###試したこと
 
-  　となると怪しいのはshop-thumbnailコンポーネントか。上手く変数を渡せていないかも。
+-データベースに登録があることを確認。
+-filenameテーブルに自動生成した名前で登録できている。57309063_67f44abb00230.jpg
+-`dd($shop->filename)`でfilename(273467030_67f44c465eafb.jpg)を取得できていることを確認。
 
-  2.shop-thombnailコンポーネントを確認
 
-    shops/index.blade.phpでコンポーネントの変数を確認。
-    Blade側で「:属性="変数名"」で指定し、Bladeコンポーネントで「{{ $属性名 }}」で指定する。
-    記述の仕方に問題はなさそう。
+####shop-thombnailコンポーネントを確認
 
-      Blade.php
-        <x-shop-thumbnail :filename="$shop->filename" />
-      shop-thumbnail.blade.php
-        <img src="{{ asset('storage/shops/' . $filename) }}">
+shops/index.blade.phpでコンポーネントの変数を確認。
+Blade側で「:属性="変数名"」で指定し、Bladeコンポーネントで「{{ $属性名 }}」で指定する。
+記述の仕方に問題はなさそう。
 
-  3.シンボリックリンクの再作成
-  storageとpublicのリンクを確認。
+Blade.php
+<x-shop-thumbnail :filename="$shop->filename" />
+shop-thumbnail.blade.php
+<img src="{{ asset('storage/shops/' . $filename) }}">
 
-    コマンド：php artisan storage:link
-    結果：ERROR The [E:\xampp\htdocs\laravel\umarche\public\storage] link already exists.
+####シンボリックリンクの再作成
 
-  
-  既にリンクが作成されているらしい。
-  publicの状態を確認
+storageとpublicのリンクを確認。
+
+コマンド：php artisan storage:link
+結果：ERROR The [E:\xampp\htdocs\laravel\umarche\public\storage] link already exists.
+
+
+既にリンクが作成されているらしい。
+publicの状態を確認
 
 ```console:dir public
 dir public
@@ -466,17 +459,16 @@ Volume Serial Number is E61D-1EDE
 5 Dir(s)  583,660,560,384 bytes free
 ```
                     
-
-  storageが<JUNCTION>になっていないので削除して再作成
+storageが<JUNCTION>になっていないので削除して再作成
 
 
 ```console:rmdir public\storage
-rmdir public\storage
+
 dir public
 2025/04/08  07:35    <JUNCTION>     storage [E:\xampp\htdocs\laravel\umarche\storage\app\public]
 ```
 
-  シンボリックリンクが正しく通って画像が表示されるようになった。
+シンボリックリンクが正しく通って画像が表示されるようになった。
 
 ◆解決！
 
@@ -528,7 +520,7 @@ dir public
   色々調べたら同じ症状になっている人がいるようで、1～3のモーダルウィンドウをMircoModal.close(modal); で閉じているのが原因みたい。
   確かに上記をコメントアウトしてjavascript側に画像クリックで閉じる動きを追加したら症状がなくなった。
 
-  モーダルウィンドウに<div data-micromodal-trigger=""></div>を追加しても想定通りに動作したということで、
+  モーダルウィンドウに`<div data-micromodal-trigger=""></div>`を追加しても想定通りに動作したということで、
   ライブラリ側の問題のよう。
 
   今回はdivタグを追加する方向で対応。
@@ -536,10 +528,14 @@ dir public
 2025/4/11-------------------------------------
 
 ##Productを新規登録する機能を追加。
-  ・ダミーデータ生成
+-MVCの構築
+-プロダクトテーブル
+-プロダクトのダミーデータを生成
 
 ----------------------------------------------
+
 2025/4/12-------------------------------------
+
 ##Productの内容を編集する機能を追加。
 
 product/editのviewファイルを作成。
@@ -630,6 +626,87 @@ if ($request->current_quantity !== $quantity) {
     return redirect()
         ->route('owner.products.index')
         ->with(['message' => '商品情報を更新しました。', 'status' => 'info']);
+}
+```
+
+###Error：バリデーションのエラーメッセージが表示されない
+
+最初はフラッシュメッセージを疑い、コントローラーを疑い、色々試したがコンポーネントを利用していることを思いだす
+
+```php:edit.brade.php
+<x-input-error :messages="$errors->get('name')" class="mt-2" />
+```
+
+```php:input-error.blade.php
+@props(['messages'])
+
+@if ($messages)
+    <ul {{ $attributes->merge(['class' => 'text-sm text-red-600 dark:text-red-400 space-y-1']) }}>
+        @foreach ((array) $messages as $message)
+            <li>{{ $message }}</li>
+        @endforeach
+    </ul>
+@endif
+```
+
+構文に問題はないが、`get()`に属性を渡すのを忘れていた。
+各inputタグで設定した属性を渡して解決。
+
+----------------------------------------------
+
+2025/4/13-------------------------------------
+
+##マジックナンバー回避
+
+`ProductController/update()`でtypeをそれぞれ暫定的に1と2で設定していたが、マジックナンバーとなってしまう。
+※マジックナンバー：何を意味しているのか分からない数字
+  今回の例ではそれぞれ追加と削減の意味を持つ数字だが、何をしているのかよく分からない。
+
+```php:マジックナンバーの例
+if($request->type === '1'){
+  $newQuantity = $request->quantity;
+}
+if($request->type === '2'){
+  $newQuantity = $request->quantity * -1;
+}
+```
+
+
+この1と2の数字を`app/Constants/common.php`に定数クラスを作成して分かりやすくする。
+
+```php:app/Constants/common.php
+namespace App\Constants;
+
+class Common
+{
+  const PRODUCT_ADD = "1";
+  const PRODUCT_REDUCE = "2";
+
+  const PRODUCT_LIST = [
+    'add' => self::PRODUCT_ADD,
+    'reduce' => self::PRODUCT_REDUCE,];
+}
+```
+
+`app/config/app.php`にエイリアス設定を追記すればバックスラッシュで使えるようになる
+
+```php:使用例
+\Constant::PRODUCT_LIST['add'];
+\Constant::PRODUCT_LIST['reduce'];
+```
+
+...はずだが、Laravel11からエイリアスの設定が`config/app.app`から別の場所に行っているようで
+調べるのに時間がかかりそうなので今回はuse文で読み込むことにする。
+
+これでそれぞれの定数が何をしているかが分かりやすくなった。
+```php:ProductController
+use App\Constants\Common;
+
+if ($request->type === Common::PRODUCT_LIST['add']) {
+    $newQuantity = $request->quantity;
+}
+if ($request->type === Common::PRODUCT_LIST['reduce']) {
+    $newQuantity = $request->quantity * -1;
 }
 ```
 
