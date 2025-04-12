@@ -778,4 +778,23 @@ if ($imageInProducts->isNotEmpty()) {
 }
 ```
 
+###Routoの調整
+
+`route\owner.php`のwilcomeページへのRouteと`route\ownerAuth.php`新規登録（Resister）は今のところ使う予定がないのでコメントアウト
+`Owner\Auth\AuthenticatedSessionController.php`のログアウト後のリダイレクト先がwelcomeページになっているため、`return redirect('/owner/login');`としてログインページに変更
+
+```php:AuthenticatedSessionController.php
+
+public function destroy(Request $request): RedirectResponse
+{
+    Auth::guard('owners')->logout();
+
+    $request->session()->invalidate();
+
+    $request->session()->regenerateToken();
+
+    return redirect('/owner/login');
+}
+```
+
 ----------------------------------------------

@@ -8,9 +8,9 @@ use App\Http\Controllers\Owner\ImageController;
 use App\Http\Controllers\Owner\ProductController;
 use App\Models\Product;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 Route::prefix('shops')->
     middleware('auth:owners')->group(function(){
