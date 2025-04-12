@@ -1,5 +1,5 @@
 2025/4/5--------------------------------------
-◆Error
+###Error
 ログイン画面でリダイレクトバグ発生
 事象：パスワードを入力してもdashboardに移行せず、login画面にリダイレクトされる
 owner, adminではログインできないが、userではdashboardにログイン可能
@@ -16,7 +16,7 @@ route/owner.phpの14行目、Route::middlwareメソッドを修正すること�
 
 2025/4/6--------------------------------------
 
-◆Error
+###Error
 AdminDashboardに新たにナビゲーションを制作し、ルートを作成。
 オーナ一覧画面が正しく表示されない。
 
@@ -67,7 +67,7 @@ Exception: Call to undefined method App\Http\Controllers\Admin\OwnersController:
   }
  
 
-◆Error
+###Error
 Seederを作成しリフレッシュマイグレートで作成しなおした際にSQL側でエラー
 
 Illuminate\Database\QueryException
@@ -92,7 +92,7 @@ createメソッドの引数がownersになっていることを確認。修正�
             })
         }
 
-◆Error
+###Error
 Collectionのテストコードを記載したところ、/admin/owners/Indexのviewが真っ白で何も表示されなくなった
 （エラーメッセージもなし）
 
@@ -128,7 +128,7 @@ Collectionのテストコードを記載したところ、/admin/owners/Indexの
 
 ◆解決
 
-◆Error
+###Error
 create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
 
   1. 親要素に別のCSSが機能しているか確認。
@@ -148,7 +148,7 @@ create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
 
 2025/4/7--------------------------------------
 
-◆Error
+###Error
 Adminでログアウトすると404エラー
 admin.phpのadmin.welcomeをコメントアウトしたため、ログアウト後のリダイレクト先がNotFound。
 
@@ -156,7 +156,7 @@ admin.phpのadmin.welcomeをコメントアウトしたため、ログアウト�
 
   app/Http/Controllers/Admin/Auth/AuthenticatedSessionController.php内のdestroyメソッドにおけるリダイレクト先を管理者(admin)のログイン画面に。
 
-◆Accident
+###Accident
 phpMyAdminの起動のためにXamppContorllerのAdminボタンが使えなかったことが地味にストレスだったため、
 何とかならんかと色々調べてXamppのxampp-controll.iniを編集したらphpMyAdminが読み込まれなくなる。
 ロードが終わらずいつまで待ってもviewが表示されず、120sec待機状態だったためのエラーが発生。
@@ -198,8 +198,7 @@ laravelとブラウザのキャッシュクリアやPCの再起動を試して�
 
 ◆解決
 
-
-◆Error
+###Error
 shop/editでショップ画像が正しくアップロードされず、storage/publicにフォルダが作成されない
 
 1. ざっくり色々確認
@@ -356,14 +355,14 @@ shop/editでショップ画像が正しくアップロードされず、storage/
 ----------------------------------------------
 
 2025/4/8--------------------------------------
-◆Error
+###Error
 InterventionImageを利用し画像のリサイズと圧縮を試みるも上手く導入できず。
 
 メッセージ：Class "Intervention\Image\ImageServiceProvider" not found
 
 よくよく調べてみるとLaravelとInterventionImageのverの問題で導入方法がかなり変わっているよう。
 
-  1.試したこと
+  1. 試したこと
     ・Intervention Image のインストール確認（問題なし）
     ・オートローダーを再生成（エラー：Class "Intervention\Image\ImageServiceProvider" not found）
     ・キャッシュのクリア
@@ -371,26 +370,27 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
     ・Composerのバージョンロック
     ・php.iniの設定ファイル書き換え
 
-
   結果：
+
     Laravel10以前はapp.phpでProviderを管理していたが、Laravel11ではServiceProviderはapp/bootstrap/providersに登録されていてapp.phpは触らないように仕様変更された。
     InterventionImage2まではServiceProviderを利用していたが、InterventionImage3になってからはインスタンス化して使うように仕様変更があった。
     ちなみにLaravel11とInterventionImage2に互換性はない。
     あれこれ試して色々調べて、ここまで来るのに5時間ぐらいかかった……。
 
-  2.今回は素直にインスタンス化して使う
+  2. 今回は素直にインスタンス化して使う
     何度も同じコードを書くことになるとプロバイダとして登録する方が望ましいけども、今回はテストだしインスタンス化して使うことに決定。
 
     ◆Error：GD PHP extension must be installed to use this driver.
       ドライバが正しく読み込まれていない。
       デフォルトでImagickを使う仕様になっているのでGdに書き換え
 
-      参考：https://image.intervention.io/v3/introduction/installation
- 
-        use Intervention\Image\Drivers\Imagick\Driver;
-        ↓
-        use Intervention\Image\Drivers\Gd\Driver;
+      参考：[InterventionImage3:導入](https://image.intervention.io/v3/introduction/installation)
 
+ 
+
+        `use Intervention\Image\Drivers\Imagick\Driver;`
+        ↓
+        `use Intervention\Image\Drivers\Gd\Driver;`
 
     ◆Error：Call to undefined method Intervention\Image\ImageManager::make()
       Intervention\Image\ImageManagerにmakeメソッドが見つからない。
@@ -412,11 +412,10 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
 
 ◆解決！
 
-
-◆Error：Shopサムネイルが表示されない。
+#Error：Shopサムネイルが表示されない。
 店舗情報を更新したところ、owner/shops/indexにリダイレクト後に壊れた画像ファイルの表示になりサムネイルが表示されない。
 
-  1.試したこと
+  1. 試したこと
     ・データベースに登録があることを確認。
     ・filenameテーブルに自動生成した名前で登録できている。57309063_67f44abb00230.jpg
     ・dd()でShopControllerでfilenameを取得できていることを確認。
@@ -428,6 +427,7 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
   　となると怪しいのはshop-thumbnailコンポーネントか。上手く変数を渡せていないかも。
 
   2.shop-thombnailコンポーネントを確認
+
     shops/index.blade.phpでコンポーネントの変数を確認。
     Blade側で「:属性="変数名"」で指定し、Bladeコンポーネントで「{{ $属性名 }}」で指定する。
     記述の仕方に問題はなさそう。
@@ -439,35 +439,42 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
 
   3.シンボリックリンクの再作成
   storageとpublicのリンクを確認。
+
     コマンド：php artisan storage:link
     結果：ERROR The [E:\xampp\htdocs\laravel\umarche\public\storage] link already exists.
+
   
   既にリンクが作成されているらしい。
   publicの状態を確認
-    コマンド：dir public
 
-    結果：
-        Volume in drive E is ボリューム
-        Volume Serial Number is E61D-1EDE
-      2025/04/07  20:33    <DIR>          .
-      2025/04/07  20:33    <DIR>          ..
-      2025/01/24  12:55               740 .htaccess
-      2025/04/07  10:11    <DIR>          build
-      2025/01/24  12:55                 0 favicon.ico
-      2025/04/07  20:33                17 hot
-      2025/04/07  21:06    <DIR>          images
-      2025/04/06  02:57             1,675 index.php
-      2025/01/24  12:55                24 robots.txt
-      2025/04/05  17:00    <DIR>          storage
-                    5 File(s)          2,456 bytes
-                    5 Dir(s)  583,660,560,384 bytes free
+```console:dir public
+dir public
+
+Volume in drive E is ボリューム
+Volume Serial Number is E61D-1EDE
+2025/04/07  20:33    <DIR>          .
+2025/04/07  20:33    <DIR>          ..
+2025/01/24  12:55               740 .htaccess
+2025/04/07  10:11    <DIR>          build
+2025/01/24  12:55                 0 favicon.ico
+2025/04/07  20:33                17 hot
+2025/04/07  21:06    <DIR>          images
+2025/04/06  02:57             1,675 index.php
+2025/01/24  12:55                24 robots.txt
+2025/04/05  17:00    <DIR>          storage
+5 File(s)          2,456 bytes
+5 Dir(s)  583,660,560,384 bytes free
+```
+                    
 
   storageが<JUNCTION>になっていないので削除して再作成
-    コマンド：
-    rmdir public\storage
-    dir public
 
-    結果：2025/04/08  07:35    <JUNCTION>     storage [E:\xampp\htdocs\laravel\umarche\storage\app\public]
+
+```console:rmdir public\storage
+rmdir public\storage
+dir public
+2025/04/08  07:35    <JUNCTION>     storage [E:\xampp\htdocs\laravel\umarche\storage\app\public]
+```
 
   シンボリックリンクが正しく通って画像が表示されるようになった。
 
@@ -475,6 +482,8 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
 
 ----------------------------------------------
 2025/4/10-------------------------------------
+
+##画像を登録した際、縦横比を16：9のアスペクト比でトリミングとリサイズを行う仕様を追加。
 
 ◆Accident：縦長の画像をリサイズすると画像の縦横比が変わって伸びてしまう
 
@@ -487,6 +496,7 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
 
   Example Code
   
+```php:Intervention Image3.0
     use Intervention\Image\ImageManager;
     use Intervention\Image\Drivers\Gd\Driver;
 
@@ -502,18 +512,20 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
 
     // cover a size of 300x300 and position crop on the left
     $image->cover(300, 300, 'left'); // 300 x 300 px
+```
 
+##商品を登録するときに画像を登録したものから選択するモーダルウィンドを追加
 
 ◆Error：micromodalでファイル選択が想定した動作をしない
 画像は4枚まで選べるようにしたが、4番目のボタンを選択して画像を登録すると3番目のサムネイルに上書きされる。
 どうやら1～3番目のボタンを選び画像を登録した後に4番目から選ぶとダメなようで
 ４番目から選ぶと正しく動作する。
 
-1.検証でimgファイルのデータを見てみる
+1. 検証でimgファイルのデータを見てみる
   画像の1～3を選択した後に4を選択すると、　data_id がimage3-4となっていて
   data-modal はmodal-4が選択されるはずが modal-3となっており、image3の設定を引き継いでいるよう。
 
-  色々調べたら同じ症状になっている人がいるようで、1～3のモーダルウィンドウをMircoModal.close(modal);で閉じているのが原因みたい。
+  色々調べたら同じ症状になっている人がいるようで、1～3のモーダルウィンドウをMircoModal.close(modal); で閉じているのが原因みたい。
   確かに上記をコメントアウトしてjavascript側に画像クリックで閉じる動きを追加したら症状がなくなった。
 
   モーダルウィンドウに<div data-micromodal-trigger=""></div>を追加しても想定通りに動作したということで、
@@ -523,10 +535,102 @@ InterventionImageを利用し画像のリサイズと圧縮を試みるも上手
 
 2025/4/11-------------------------------------
 
+##Productを新規登録する機能を追加。
+  ・ダミーデータ生成
+
+----------------------------------------------
+2025/4/12-------------------------------------
+##Productの内容を編集する機能を追加。
+
+product/editのviewファイルを作成。
+
+データベースの在庫情報を参照し、更新時に購入等でデータベース内の変更があった際に
+更新ボタンを押しても更新を行わず、ルート情報を保持したままEdit画面へリダイレクトする仕様を追加。
 
 
+```php:ProductController/updateメソッド
 
+public function update(ProductRequest $request, string $id)
+{
+    $request->validate([
+        'current_quantity' => 'required|integer',
+    ]);
 
+    $product = Product::findOrFail($id);
 
+    $quantity = Stock::where('product_id', $product->id)
+        ->sum('quantity');
+
+    if ($request->current_quantity !== $quantity) {
+        return redirect()
+            ->route('owner.products.edit', ['product' => $id])
+            ->with([
+                'message' => '在庫数が変更されています。再度確認してください。',
+                'status' => 'alert',
+            ]);
+    } else {
+        dd($request->all());
+    }
+}
+
+```
+
+##追加のチェックボックスに－の値を入れた際にバリデーションがかかる機能を追加
+
+ProdcutControllerのupdateメソッドに以下のコードを記述
+
+```php:ProdcutController/updateメソッド
+$product = Product::findOrFail($id); 
+
+$quantity = Stock::where('product_id', $product->id)
+    ->sum('quantity');
+
+if ($request->current_quantity !== $quantity) {
+    return redirect()
+        ->route('owner.products.edit', ['product' => $id])
+        ->with([
+            'message' => '在庫数が変更されています。再度確認してください。',
+            'status' => 'alert',
+        ]);
+} else {
+    try {
+        DB::Transaction(function () use ($request, $product) {
+
+            $product->name = $request->name;
+            $product->information = $request->information;
+            $product->price = $request->price;
+            $product->sort_order = $request->sort_order;
+            $product->shop_id = $request->shop_id;
+            $product->secondary_category_id = $request->category;
+            $product->image1 = $request->image1;
+            $product->image2 = $request->image2;
+            $product->image3 = $request->image3;
+            $product->image4 = $request->image4;
+            $product->is_selling = $request->is_selling;
+            $product->save();
+            
+            if($request->type === '1'){
+                $newQuantity = $request->quantity;
+            }
+            if($request->type === '2'){
+                $newQuantity = $request->quantity * -1;
+            }
+
+            Stock::create([
+                'product_id' => $product->id,
+                'type' => $request->type,
+                'quantity' => $newQuantity
+            ]);
+        });
+    } catch (Throwable $e) {
+        Log::error($e);
+        throw $e;
+    }
+
+    return redirect()
+        ->route('owner.products.index')
+        ->with(['message' => '商品情報を更新しました。', 'status' => 'info']);
+}
+```
 
 ----------------------------------------------
