@@ -875,7 +875,7 @@ class UserSeeder extends Seeder
 use App\Http\Controllers\User\ItemController;
 
 Route::middleware('auth:users')->group(function(){
-        Route::get('/', [ItemController::class,'index'])->name('items.index');
+        Route::get('/', [ItemController::class,'index'])->name('user.items.index');
    
     });
 ```
@@ -900,5 +900,63 @@ class ItemController extends Controller
 
 `resource/views`にuserフォルダを作成し、`index.blade.php`を作成し「商品一覧」とだけ書いておく。
 [ローカルホスト](http://127.0.0.1:8000/)にログインし、商品一覧の画面が最初に表示されることを確認。
+
+##商品一覧のview側の調整
+
+user/index.blade.phpの中身を調整
+一旦テストでowner側のproduct/indexの中身をforeachで表示。
+
+```php:user/index.blade.php
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Dashboard') }}
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <div class="flex flex-wrap">
+                        @foreach ($products as $product)
+                            <div class="w-1/4 p-2 md:p-4">
+                                <a href=""> //ルート情報は一旦削除
+                                    <div class="border rouded-md p-2 md:p-2">
+                                        {{-- ショップの画像が設定されているかを判定 --}}
+                                        <x-thumbnail filename="{{ $product->imageFirst->filename ?? '' }}"
+                                            type="products" />
+                                        <div class="text-gray-700 my-4">
+                                            {{ $product->name }}
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
+
+```
+
+ItemControllerでProductの情報を取得
+
+```php:User/ItemContller
+use App\Models\Product;
+
+class ItemController extends Controller
+{
+    public function index()
+    {
+        $products = Product::all();
+        return view('user.index', compact('products'));
+    }
+}
+```
+
+`user-navigation.blade.php`のdashboradへのRouto情報を全て`user.items.index`に修正。
 
 ----------------------------------------------
