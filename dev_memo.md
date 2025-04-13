@@ -382,20 +382,22 @@ InterventionImage2まではServiceProviderを利用していたが、Interventio
 ドライバが正しく読み込まれていない。
 デフォルトでImagickを使う仕様になっているのでGdに書き換え
 
-参考：[InterventionImage3:導入](https://image.intervention.io/v3/introduction/installation)
+参考：[InterventionImage3: 導入](https://image.intervention.io/v3/introduction/installation)
 
-`use Intervention\Image\Drivers\Imagick\Driver;`
+ `use Intervention\Image\Drivers\Imagick\Driver;`
+
 ↓
-`use Intervention\Image\Drivers\Gd\Driver;`
+ `use Intervention\Image\Drivers\Gd\Driver;`
 
 ####Error：Call to undefined method Intervention\Image\ImageManager::make()
 Intervention\Image\ImageManagerにmakeメソッドが見つからない。
 画像読み込みはreadメソッドになってるっぽい？
 read()を使用したら正常にリダイレクトするようになった。
 
-```php:Intervention3
-$manager = new ImageManager(new Driver());
-$manager->read($imageFile)->resize(1920, 1080)->encode();
+```php: Intervention3
+$manager = new ImageManager(new Driver()); 
+$manager->read($imageFile)->resize(1920, 1080)->encode(); 
+
 ```
 
 参考：[Intervention3#read-image-sources](https://image.intervention.io/v3/basics/instantiation#read-image-sources)
@@ -417,7 +419,6 @@ With a configured Image Manager it is possible to read images from different sou
 -filenameテーブルに自動生成した名前で登録できている。57309063_67f44abb00230.jpg
 -`dd($shop->filename)`でfilename(273467030_67f44c465eafb.jpg)を取得できていることを確認。
 
-
 ####shop-thombnailコンポーネントを確認
 
 shops/index.blade.phpでコンポーネントの変数を確認。
@@ -435,7 +436,6 @@ storageとpublicのリンクを確認。
 
 コマンド：php artisan storage:link
 結果：ERROR The [E:\xampp\htdocs\laravel\umarche\public\storage] link already exists.
-
 
 既にリンクが作成されているらしい。
 publicの状態を確認
@@ -458,14 +458,16 @@ Volume Serial Number is E61D-1EDE
 5 File(s)          2,456 bytes
 5 Dir(s)  583,660,560,384 bytes free
 ```
-                    
-storageが<JUNCTION>になっていないので削除して再作成
 
+                    
+
+storageが<JUNCTION>になっていないので削除して再作成
 
 ```console:rmdir public\storage
 
 dir public
 2025/04/08  07:35    <JUNCTION>     storage [E:\xampp\htdocs\laravel\umarche\storage\app\public]
+
 ```
 
 シンボリックリンクが正しく通って画像が表示されるようになった。
@@ -520,7 +522,7 @@ dir public
   色々調べたら同じ症状になっている人がいるようで、1～3のモーダルウィンドウをMircoModal.close(modal); で閉じているのが原因みたい。
   確かに上記をコメントアウトしてjavascript側に画像クリックで閉じる動きを追加したら症状がなくなった。
 
-  モーダルウィンドウに`<div data-micromodal-trigger=""></div>`を追加しても想定通りに動作したということで、
+  モーダルウィンドウに `<div data-micromodal-trigger=""></div>` を追加しても想定通りに動作したということで、
   ライブラリ側の問題のよう。
 
   今回はdivタグを追加する方向で対応。
@@ -543,11 +545,11 @@ product/editのviewファイルを作成。
 データベースの在庫情報を参照し、更新時に購入等でデータベース内の変更があった際に
 更新ボタンを押しても更新を行わず、ルート情報を保持したままEdit画面へリダイレクトする仕様を追加。
 
-
-```php:ProductController/updateメソッド
+```php: ProductController/updateメソッド
 
 public function update(ProductRequest $request, string $id)
 {
+
     $request->validate([
         'current_quantity' => 'required|integer',
     ]);
@@ -567,6 +569,7 @@ public function update(ProductRequest $request, string $id)
     } else {
         dd($request->all());
     }
+
 }
 
 ```
@@ -635,6 +638,7 @@ if ($request->current_quantity !== $quantity) {
 
 ```php:edit.brade.php
 <x-input-error :messages="$errors->get('name')" class="mt-2" />
+
 ```
 
 ```php:input-error.blade.php
@@ -649,7 +653,7 @@ if ($request->current_quantity !== $quantity) {
 @endif
 ```
 
-構文に問題はないが、`get()`に属性を渡すのを忘れていた。
+構文に問題はないが、 `get()` に属性を渡すのを忘れていた。
 各inputタグで設定した属性を渡して解決。
 
 ----------------------------------------------
@@ -658,19 +662,19 @@ if ($request->current_quantity !== $quantity) {
 
 ##マジックナンバー回避
 
-`ProductController/update()`でtypeをそれぞれ暫定的に1と2で設定していたが、マジックナンバーとなってしまう。
+`ProductController/update()` でtypeをそれぞれ暫定的に1と2で設定していたが、マジックナンバーとなってしまう。
 ※マジックナンバー：何を意味しているのか分からない数字
   今回の例ではそれぞれ追加と削減の意味を持つ数字だが、何をしているのかよく分からない。
 
 ```php:マジックナンバーの例
 if($request->type === '1'){
-  $newQuantity = $request->quantity;
+  $newQuantity = $request->quantity; 
 }
 if($request->type === '2'){
-  $newQuantity = $request->quantity * -1;
+  $newQuantity = $request->quantity * -1; 
 }
-```
 
+```
 
 この1と2の数字を`app/Constants/common.php`に定数クラスを作成して分かりやすくする。
 
@@ -688,11 +692,12 @@ class Common
 }
 ```
 
-`app/config/app.php`にエイリアス設定を追記すればバックスラッシュで使えるようになる
+`app/config/app.php` にエイリアス設定を追記すればバックスラッシュで使えるようになる
 
-```php:使用例
-\Constant::PRODUCT_LIST['add'];
-\Constant::PRODUCT_LIST['reduce'];
+```php: 使用例
+\Constant:: PRODUCT_LIST['add']; 
+\Constant:: PRODUCT_LIST['reduce']; 
+
 ```
 
 ...はずだが、Laravel11からエイリアスの設定が`config/app.app`から別の場所に行っているようで
@@ -713,15 +718,18 @@ if ($request->type === Common::PRODUCT_LIST['reduce']) {
 ##ProdcutDelete
 
 コントローラーにdelet処理を記述
-```php:ProductController
+```php: ProductController
 public function destroy(string $id)
 {
+
     Product::findOrFail($id)->delete();
 
     return redirect()
         ->route('owner.products.index')
         ->with(['message' => '商品を削除しました。', 'status' => 'alert']);
+
 }
+
 ```
 
 本当に削除するのかを確認するポップアップ
@@ -737,13 +745,16 @@ function deletePost(e) {
 ```php:view/owner/product/edit/blade.php
 <form id="delete_{{ $product->id }}" method="post"
 action="{{ route('owner.products.destroy', ['product' => $product->id]) }}">
+
     @csrf
     @method('delete')
     <div class="p-2 w-full flex justify-around mt-24">
         <a href="#" data-id="{{ $product->id }}" onclick="deletePost(this)"
             class="text-white bg-red-400 border-0 py-2 px-4 focus:outline-none hover:bg-red-500 rounded text-lg ">削除する</a>
       </div>
+
 </form>
+
 ```
 
 ###画像を削除する際にプロダクトに紐づいていると外部キー制約で削除できない
@@ -780,13 +791,14 @@ if ($imageInProducts->isNotEmpty()) {
 
 ###Routoの調整
 
-`route\owner.php`のwilcomeページへのRouteと`route\ownerAuth.php`新規登録（Resister）は今のところ使う予定がないのでコメントアウト
-`Owner\Auth\AuthenticatedSessionController.php`のログアウト後のリダイレクト先がwelcomeページになっているため、`return redirect('/owner/login');`としてログインページに変更
+`route\owner.php` のwilcomeページへのRouteと `route\ownerAuth.php` 新規登録（Resister）は今のところ使う予定がないのでコメントアウト
+ログアウト後のリダイレクト先が `return redirect('/owner');` とwelcomeページになっているため、 `return redirect('/owner/login');` としてログインページに変更
 
-```php:AuthenticatedSessionController.php
+```php: AuthenticatedSessionController.php
 
 public function destroy(Request $request): RedirectResponse
 {
+
     Auth::guard('owners')->logout();
 
     $request->session()->invalidate();
@@ -794,7 +806,99 @@ public function destroy(Request $request): RedirectResponse
     $request->session()->regenerateToken();
 
     return redirect('/owner/login');
+
+}
+
+```
+
+##Userの実装準備
+
+adminとownerのコントローラーをそれぞれAdmin/Auth、Owner/Authで独立して作成したので
+分かりやすいように既存のAuthフォルダのファイルをUser/Authの階層に移動。
+各認証系ファイルの名前空間を`use App\Http\Controllers\User\Auth`に修正。
+
+伴い、Routoのファイル名を`userAuth.php`に、app.phpとwep.phpの`require __DIR__.'/auth.php';`を`require __DIR__.'/userAuth.php';`に修正。
+
+Migrationファイルはデフォルトであるのでそれを流用。SeederファイルがないのでUserSeederを新たに作成。
+
+```console
+php artisan make:seed UserSeeder
+```
+
+DB FacadesとHash Facadesを貼り付け、内容はAdminのデータを流用。
+```php: UserSeeder
+use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\Hash; 
+
+class UserSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        DB::table('users')->insert([
+            'name' => 'test',
+            'email' => 'test@test.com',
+            'password' => Hash::make('password123'),
+            'created_at' => '2023/08/25 22:45:40'
+        ]);
+    }
+
 }
 ```
+
+`DatabaseSeeder.php`に`UserSeeder::class,`を追記。
+
+`php artisan migrate:fresh --seed`と`php artisan migrate:refresh --seed`を実行しMigrateを確認。
+[ユーザー用のログインページ](http://127.0.0.1:8000/login)でログインできるか確認。
+
+デフォルトの`nagication.blade.php`のファイルネームを`user-nagication.blade.php`に変更。
+
+ロゴのサイズが大きいのでtailwindCSSで`w-12`を指定して修正。
+
+```php:user-navigation.blade.php
+
+<div class="w-12">
+    <a href="{{ route('dashboard') }}">
+        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
+    </a>
+</div>
+
+```
+
+##商品一覧の実装準備
+
+###ルート情報を設定
+
+```php:web.php
+use App\Http\Controllers\User\ItemController;
+
+Route::middleware('auth:users')->group(function(){
+        Route::get('/', [ItemController::class,'index'])->name('items.index');
+   
+    });
+```
+dashboardは利用しないのでwep.phpのdashboardのRouto情報はすべてコメントアウト。
+
+###ItemController作成
+
+`php artisan make:controller user/ItemController`でItemControllerを作成。
+まずはそのままviewを返す。
+
+```php:ItemController
+
+class ItemController extends Controller
+{
+    public function index()
+    {
+        return view('user.index');
+    }
+}
+
+```
+
+`resource/views`にuserフォルダを作成し、`index.blade.php`を作成し「商品一覧」とだけ書いておく。
+[ローカルホスト](http://127.0.0.1:8000/)にログインし、商品一覧の画面が最初に表示されることを確認。
 
 ----------------------------------------------
