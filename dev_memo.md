@@ -1,5 +1,5 @@
 2025/4/5--------------------------------------
-###Error
+### Error
 ログイン画面でリダイレクトバグ発生
 事象：パスワードを入力してもdashboardに移行せず、login画面にリダイレクトされる
 owner, adminではログインできないが、userではdashboardにログイン可能
@@ -16,7 +16,7 @@ route/owner.phpの14行目、Route::middlwareメソッドを修正すること�
 
 2025/4/6--------------------------------------
 
-###Error
+### Error
 AdminDashboardに新たにナビゲーションを制作し、ルートを作成。
 オーナ一覧画面が正しく表示されない。
 
@@ -67,7 +67,7 @@ Exception: Call to undefined method App\Http\Controllers\Admin\OwnersController:
   }
  
 
-###Error
+### Error
 Seederを作成しリフレッシュマイグレートで作成しなおした際にSQL側でエラー
 
 Illuminate\Database\QueryException
@@ -92,7 +92,7 @@ createメソッドの引数がownersになっていることを確認。修正�
             })
         }
 
-###Error
+### Error
 Collectionのテストコードを記載したところ、/admin/owners/Indexのviewが真っ白で何も表示されなくなった
 （エラーメッセージもなし）
 
@@ -128,7 +128,7 @@ Collectionのテストコードを記載したところ、/admin/owners/Indexの
 
 ◆解決
 
-###Error
+### Error
 create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
 
   1. 親要素に別のCSSが機能しているか確認。
@@ -148,7 +148,7 @@ create.blade.phpを新規作成するが、TailblocksのCSSが機能しない
 
 2025/4/7--------------------------------------
 
-###Error
+### Error
 Adminでログアウトすると404エラー
 admin.phpのadmin.welcomeをコメントアウトしたため、ログアウト後のリダイレクト先がNotFound。
 
@@ -156,7 +156,7 @@ admin.phpのadmin.welcomeをコメントアウトしたため、ログアウト�
 
   app/Http/Controllers/Admin/Auth/AuthenticatedSessionController.php内のdestroyメソッドにおけるリダイレクト先を管理者(admin)のログイン画面に。
 
-###Accident
+### Accident
 phpMyAdminの起動のためにXamppContorllerのAdminボタンが使えなかったことが地味にストレスだったため、
 何とかならんかと色々調べてXamppのxampp-controll.iniを編集したらphpMyAdminが読み込まれなくなる。
 ロードが終わらずいつまで待ってもviewが表示されず、120sec待機状態だったためのエラーが発生。
@@ -198,7 +198,7 @@ laravelとブラウザのキャッシュクリアやPCの再起動を試して�
 
 ◆解決
 
-###Error
+### Error
 shop/editでショップ画像が正しくアップロードされず、storage/publicにフォルダが作成されない
 
 1. ざっくり色々確認
@@ -355,14 +355,14 @@ shop/editでショップ画像が正しくアップロードされず、storage/
 ----------------------------------------------
 
 2025/4/8--------------------------------------
-##Error
+## Error
 InterventionImageを利用し画像のリサイズと圧縮を試みるも上手く導入できず。
 
 メッセージ：Class "Intervention\Image\ImageServiceProvider" not found
 
 よくよく調べてみるとLaravelとInterventionImageのverの問題で導入方法がかなり変わっているよう。
 
-###試したこと
+### 試したこと
 -Intervention Image のインストール確認（問題なし）
 -オートローダーを再生成（エラー：Class "Intervention\Image\ImageServiceProvider" not found）
 -キャッシュのクリア
@@ -375,10 +375,10 @@ InterventionImage2まではServiceProviderを利用していたが、Interventio
 ちなみにLaravel11とInterventionImage2に互換性はない。
 あれこれ試して色々調べて、ここまで来るのに5時間ぐらいかかった……。
 
-###今回は素直にインスタンス化して使う
+### 今回は素直にインスタンス化して使う
 何度も同じコードを書くことになるとプロバイダとして登録する方が望ましいけども、今回はテストだしインスタンス化して使うことに決定。
 
-####Error：GD PHP extension must be installed to use this driver.
+#### Error：GD PHP extension must be installed to use this driver.
 ドライバが正しく読み込まれていない。
 デフォルトでImagickを使う仕様になっているのでGdに書き換え
 
@@ -389,7 +389,7 @@ InterventionImage2まではServiceProviderを利用していたが、Interventio
 ↓
  `use Intervention\Image\Drivers\Gd\Driver;`
 
-####Error：Call to undefined method Intervention\Image\ImageManager::make()
+#### Error：Call to undefined method Intervention\Image\ImageManager::make()
 Intervention\Image\ImageManagerにmakeメソッドが見つからない。
 画像読み込みはreadメソッドになってるっぽい？
 read()を使用したら正常にリダイレクトするようになった。
@@ -410,16 +410,16 @@ With a configured Image Manager it is possible to read images from different sou
 
 ◆解決！
 
-##Error：Shopサムネイルが表示されない。
+## Error：Shopサムネイルが表示されない。
 店舗情報を更新したところ、owner/shops/indexにリダイレクト後に壊れた画像ファイルの表示になりサムネイルが表示されない。
 
-###試したこと
+### 試したこと
 
 -データベースに登録があることを確認。
 -filenameテーブルに自動生成した名前で登録できている。57309063_67f44abb00230.jpg
 -`dd($shop->filename)`でfilename(273467030_67f44c465eafb.jpg)を取得できていることを確認。
 
-####shop-thombnailコンポーネントを確認
+#### shop-thombnailコンポーネントを確認
 
 shops/index.blade.phpでコンポーネントの変数を確認。
 Blade側で「:属性="変数名"」で指定し、Bladeコンポーネントで「{{ $属性名 }}」で指定する。
@@ -430,7 +430,7 @@ Blade.php
 shop-thumbnail.blade.php
 <img src="{{ asset('storage/shops/' . $filename) }}">
 
-####シンボリックリンクの再作成
+#### シンボリックリンクの再作成
 
 storageとpublicのリンクを確認。
 
@@ -477,7 +477,7 @@ dir public
 ----------------------------------------------
 2025/4/10-------------------------------------
 
-##画像を登録した際、縦横比を16：9のアスペクト比でトリミングとリサイズを行う仕様を追加。
+## 画像を登録した際、縦横比を16：9のアスペクト比でトリミングとリサイズを行う仕様を追加。
 
 ◆Accident：縦長の画像をリサイズすると画像の縦横比が変わって伸びてしまう
 
@@ -508,7 +508,7 @@ dir public
     $image->cover(300, 300, 'left'); // 300 x 300 px
 ```
 
-##商品を登録するときに画像を登録したものから選択するモーダルウィンドを追加
+## 商品を登録するときに画像を登録したものから選択するモーダルウィンドを追加
 
 ◆Error：micromodalでファイル選択が想定した動作をしない
 画像は4枚まで選べるようにしたが、4番目のボタンを選択して画像を登録すると3番目のサムネイルに上書きされる。
@@ -529,7 +529,7 @@ dir public
 
 2025/4/11-------------------------------------
 
-##Productを新規登録する機能を追加。
+## Productを新規登録する機能を追加。
 -MVCの構築
 -プロダクトテーブル
 -プロダクトのダミーデータを生成
@@ -538,7 +538,7 @@ dir public
 
 2025/4/12-------------------------------------
 
-##Productの内容を編集する機能を追加。
+## Productの内容を編集する機能を追加。
 
 product/editのviewファイルを作成。
 
@@ -574,7 +574,7 @@ public function update(ProductRequest $request, string $id)
 
 ```
 
-##追加のチェックボックスに－の値を入れた際にバリデーションがかかる機能を追加
+## 追加のチェックボックスに－の値を入れた際にバリデーションがかかる機能を追加
 
 ProdcutControllerのupdateメソッドに以下のコードを記述
 
@@ -632,7 +632,7 @@ if ($request->current_quantity !== $quantity) {
 }
 ```
 
-###Error：バリデーションのエラーメッセージが表示されない
+### Error：バリデーションのエラーメッセージが表示されない
 
 最初はフラッシュメッセージを疑い、コントローラーを疑い、色々試したがコンポーネントを利用していることを思いだす
 
@@ -660,7 +660,7 @@ if ($request->current_quantity !== $quantity) {
 
 2025/4/13-------------------------------------
 
-##マジックナンバー回避
+## マジックナンバー回避
 
 `ProductController/update()` でtypeをそれぞれ暫定的に1と2で設定していたが、マジックナンバーとなってしまう。
 ※マジックナンバー：何を意味しているのか分からない数字
@@ -715,7 +715,7 @@ if ($request->type === Common::PRODUCT_LIST['reduce']) {
 }
 ```
 
-##ProdcutDelete
+## ProdcutDelete
 
 コントローラーにdelet処理を記述
 ```php: ProductController
@@ -757,7 +757,7 @@ action="{{ route('owner.products.destroy', ['product' => $product->id]) }}">
 
 ```
 
-###画像を削除する際にプロダクトに紐づいていると外部キー制約で削除できない
+### 画像を削除する際にプロダクトに紐づいていると外部キー制約で削除できない
 
 画像を使っているか確認して、使ってる場合はproductのimage1～4をnullに変更して削除する。
 
@@ -789,7 +789,7 @@ if ($imageInProducts->isNotEmpty()) {
 }
 ```
 
-###Routoの調整
+### Routoの調整
 
 `route\owner.php` のwilcomeページへのRouteと `route\ownerAuth.php` 新規登録（Resister）は今のところ使う予定がないのでコメントアウト
 ログアウト後のリダイレクト先が `return redirect('/owner');` とwelcomeページになっているため、 `return redirect('/owner/login');` としてログインページに変更
@@ -867,9 +867,9 @@ class UserSeeder extends Seeder
 
 ```
 
-##商品一覧の実装準備
+## 商品一覧の実装準備
 
-###ルート情報を設定
+### ルート情報を設定
 
 ```php:web.php
 use App\Http\Controllers\User\ItemController;
@@ -881,7 +881,7 @@ Route::middleware('auth:users')->group(function(){
 ```
 dashboardは利用しないのでwep.phpのdashboardのRouto情報はすべてコメントアウト。
 
-###ItemController作成
+### ItemController作成
 
 `php artisan make:controller user/ItemController`でItemControllerを作成。
 まずはそのままviewを返す。
@@ -901,7 +901,7 @@ class ItemController extends Controller
 `resource/views`にuserフォルダを作成し、`index.blade.php`を作成し「商品一覧」とだけ書いておく。
 [ローカルホスト](http://127.0.0.1:8000/)にログインし、商品一覧の画面が最初に表示されることを確認。
 
-###商品一覧のview側の雛形を作成
+### 商品一覧のview側の雛形を作成
 
 user/index.blade.phpの中身を一旦テストとしてowner側のproduct/indexの中身をforeachで表示することに。
 
@@ -960,7 +960,7 @@ class ItemController extends Controller
 [ローカルホスト](http://127.0.0.1:8000/)にログインし、エラーが発生していないことを確認。
 
 
-###Faker＆Factoryで大量のダミーデータ作成
+### Faker＆Factoryで大量のダミーデータ作成
 
 ```Composer.json:Fakerのver確認
 "fakerphp/faker": "^1.23",
@@ -1033,7 +1033,7 @@ Stock::factory(100)->create();
 `php artisan migrate:refresh --seed`でSeederデータが正常に作成されるか確認。
 
 
-####Error：`HasFactory`が見つからないエラー。
+#### Error：`HasFactory`が見つからないエラー。
 
 `Trait "App\Models\HasFactory" not found`
 
@@ -1047,7 +1047,7 @@ use HasFactory
 ```
 
 
-####Error：`introduction`というフィールド名がデータベース上に見つからないエラー。
+#### Error：`introduction`というフィールド名がデータベース上に見つからないエラー。
 
 ```console
 
@@ -1062,9 +1062,22 @@ SQLSTATE[42S22]: Column not found: 1054 Unknown column 'introduction' in 'field 
 phpMyAdminでproductテーブルとt_stockテーブルそれぞれにダミーデータが生成されているか確認。
 
 
-####Error：ユーザーのログイン時に404NotFound
+#### Error：ユーザーのログイン時に404NotFound
 
 以前[ルート情報を設定](###ルート情報を設定)の際にdashboardをコメントアウトした影響。
 User/Authフォルダ内の全てのControllerのリダイレクト先を`dashboard`から`user.items.index`に修正。
+
+
+## UserIndexのview調整
+
+tailblockからCSSを拝借し、index.blade.phpで商品の情報を追加して調整
+
+```php:user/index.blade.php
+<div class="mt-4">
+  <h3 class="text-gray-500 text-xs tracking-widest title-font mb-1">{{ $product->category->name }}</h3>
+  <h2 class="text-gray-900 title-font text-lg font-medium">{{ $product->name }}</h2>
+  <p class="mt-1">${{ number_format($product->price) }}<span class="text-sm text-gray-700">円（税込）</span></p>
+</div>
+```
 
 ----------------------------------------------
