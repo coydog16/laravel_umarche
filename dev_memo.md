@@ -901,10 +901,9 @@ class ItemController extends Controller
 `resource/views`にuserフォルダを作成し、`index.blade.php`を作成し「商品一覧」とだけ書いておく。
 [ローカルホスト](http://127.0.0.1:8000/)にログインし、商品一覧の画面が最初に表示されることを確認。
 
-##商品一覧のview側の調整
+###商品一覧のview側の雛形を作成
 
-user/index.blade.phpの中身を調整
-一旦テストでowner側のproduct/indexの中身をforeachで表示。
+user/index.blade.phpの中身を一旦テストとしてowner側のproduct/indexの中身をforeachで表示することに。
 
 ```php:user/index.blade.php
 <x-app-layout>
@@ -958,5 +957,114 @@ class ItemController extends Controller
 ```
 
 `user-navigation.blade.php`のdashboradへのRouto情報を全て`user.items.index`に修正。
+[ローカルホスト](http://127.0.0.1:8000/)にログインし、エラーが発生していないことを確認。
+
+
+###Faker＆Factoryで大量のダミーデータ作成
+
+```Composer.json:Fakerのver確認
+"fakerphp/faker": "^1.23",
+```
+
+Fakerを日本語化
+```php:config/app.php
+
+'faker_locale' => env('APP_FAKER_LOCALE', 'ja_JP'),
+
+```
+
+consoleコマンドでFactoryファイルを作成
+`php artisan make:factory ProductFactory --model=Product`
+`php artisan make:factory StockFactory --model=Stock`
+
+使い方は[Fakerチートシート](https://qiita.com/tosite0345/items/1d47961947a6770053af)を参照
+
+作成した2つのFactoryファイルにそれぞれ値を入力
+
+```php:ProductFactory.php
+
+public function definition(): array
+{
+    return [
+        'name' => fake()->name(),
+        'introduction' => fake()->realText(200, 2),
+        'price' => fake()->numberBetween(10, 100000),
+        'is_selling' => fake()->numberBetween(0, 1),
+        'sort_order' => fake()->randomNumber(),
+        'shop_id' => fake()->numberBetween(1, 2),
+        'secondary_category_id' => fake()->numberBetween(1, 2),
+        'image1' => fake()->numberBetween(1, 6),
+        'image2' => fake()->numberBetween(1, 6),
+        'image3' => fake()->numberBetween(1, 6),
+        'image4' => fake()->numberBetween(1, 6),
+    ];
+}
+
+```
+
+```php:StockFactory.php
+
+use App\Models\Product;　//use文でProductモデルを読み込み、外部キーを紐づけ
+
+public function definition(): array
+{
+    return [
+        'product_id' => Product::factory(),
+        'type' => fake()->numberBetween(1, 2),
+        'quantity' => fake()->numberBetween(1, 100),
+    ];
+}
+
+```
+
+Seederを呼び出すためにデータベースseederにコードを追記
+※外部キー制約を設定しているテーブルを先に作成する
+
+```php:Datacase.seeder
+
+use App\Models\Product;
+use App\Models\Stock;
+
+Product::factory(100)->create();
+Stock::factory(100)->create();
+
+```
+
+`php artisan migrate:refresh --seed`でSeederデータが正常に作成されるか確認。
+
+
+####Error：`HasFactory`が見つからないエラー。
+
+`Trait "App\Models\HasFactory" not found`
+
+Laravel11ではデフォルトで`use HasFactpory`の記述がないため、追記する必要があるらしい。
+
+`Models/Stock.php`と`Models/Product.php`に下記を追記
+
+```php
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use HasFactory
+```
+
+
+####Error：`introduction`というフィールド名がデータベース上に見つからないエラー。
+
+```console
+
+SQLSTATE[42S22]: Column not found: 1054 Unknown column 'introduction' in 'field list' (Connection: mysql, SQL: insert into products (name, introduction, price, is_selling, sort_order, shop_id, secondary_category_id, image1, image2, image3, image4, updated_at, created_at) values (加藤 里佳, るというこのごろに来ているように赤旗あ かりこっちをふる朝にもつれてみように苹果りんどんです」「あ、お母っかさね直なおにそこらえているために、早く見ながれました。「ぼくたちにとなの幸さいわの窓まどの人の人はわかった人の人が、そこにこの水ぎわに沿そっちへ来て、なんだ」「みんながらんな立派りっぱりその牛乳屋ぎゅうに、わずカムパネルラのうして見ます。こいです。その苹果りんごの肉にくりました。その見ると、。, 88660, 0, 25494, 1, 1, 1, 2, 4, 2, 2025-04-13 16:17:55, 2025-04-13 16:17:55))
+
+```
+
+`introduction`というフィールド名がデータベース上に見つからないエラー。
+`ProducFactory.php`のデータの一部の記載ミスだったので該当箇所を`information`に修正。
+
+再度`php artisan migrate:refresh --seed`でSeederデータが正常に作成されるか確認。
+phpMyAdminでproductテーブルとt_stockテーブルそれぞれにダミーデータが生成されているか確認。
+
+
+####Error：ユーザーのログイン時に404NotFound
+
+以前[ルート情報を設定](###ルート情報を設定)の際にdashboardをコメントアウトした影響。
+User/Authフォルダ内の全てのControllerのリダイレクト先を`dashboard`から`user.items.index`に修正。
 
 ----------------------------------------------

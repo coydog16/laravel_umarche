@@ -12,8 +12,8 @@
                     <div class="flex flex-wrap">
                         @foreach ($products as $product)
                             <div class="w-1/4 p-2 md:p-4">
-                                <a href="{{ route('owner.products.edit') }}">
-                                    <div class="border rouded-md p-2 md:p-2">
+                                <a href="">
+                                    <div class="border rounded-md p-2 md:p-2">
                                         {{-- ショップの画像が設定されているかを判定 --}}
                                         <x-thumbnail filename="{{ $product->imageFirst->filename ?? '' }}"
                                             type="products" />
