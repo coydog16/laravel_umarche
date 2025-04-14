@@ -658,7 +658,7 @@ if ($request->current_quantity !== $quantity) {
 
 ----------------------------------------------
 
-2025/4/13-------------------------------------
+# 2025/4/13
 
 ## マジックナンバー回避
 
@@ -1068,9 +1068,9 @@ phpMyAdminでproductテーブルとt_stockテーブルそれぞれにダミー�
 User/Authフォルダ内の全てのControllerのリダイレクト先を`dashboard`から`user.items.index`に修正。
 
 
-## UserIndexのview調整
+### UserIndexのview調整
 
-tailblockからCSSを拝借し、index.blade.phpで商品の情報を追加して調整
+[tailblock](https://tailblocks.cc/)からECOMMERCEのCSSを拝借し、index.blade.phpで商品の情報を追加して調整。
 
 ```php:user/index.blade.php
 <div class="mt-4">
@@ -1080,4 +1080,137 @@ tailblockからCSSを拝借し、index.blade.phpで商品の情報を追加し�
 </div>
 ```
 
-----------------------------------------------
+
+# 2025/4/14
+
+## 商品一覧のクエリ作成
+
+### Stockテーブルの合計が1以上であるという条件を追加。
+
+
+SQLStockテーブルをグループ化して、1以上の条件でエンティティを取得。
+
+```sql
+
+SELECT `product_id`, sum(`quantity`) as `quantity`
+FROM `t_stocks`
+GROUP BY `product_id`
+HAVING `quantity` >= 1
+
+```
+
+上記のコードで1以上の条件付けで取得することができたので、LaravelのDB::raw()を使ってデータベースを操作。
+
+```php:ItemController
+use Illuminate\Support\Facades\DB;
+
+$stocks = DB::table('t_stocks')
+    ->select(
+        'product_id',
+        DB::raw('sum(quantity) as quantity')
+    )
+    ->groupBy('product_id')
+    ->having('quantity', '>=', 1);
+
+```
+
+
+#### Error:419 Page Expired
+ログインページで419セッションエラー。
+
+##### とりあえず色々クリアとマイグレート。
+
+```console
+
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
+php artisan route:clear
+php artisan session:table
+php artisan migrate
+
+```
+
+##### デバッグコード`dd($stocks);`を削除
+
+解決。もう一度デバッグコードを入れてテスト。
+問題なさそう。
+
+```php:dd($stocks)
+
+  +columns: array:2 [▼
+    0 => "product_id"
+    1 => Illuminate\Database\Query\Expression {#1576 ▼
+      #value: "sum(quantity) as quantity"
+    }
+  ]
+
+  +groups: array:1 [▼
+    0 => "product_id"
+  ]
+  
+  +havings: array:1 [▼
+    0 => array:5 [▶]
+  ]
+
+```
+
+### shopsとproductsが販売中となっていることを条件に追加
+
+products, shop, stockをクエリビルダのjoin句で紐づけて条件付け
+
+```php:ItemController
+
+$products = DB::table('products')
+    ->joinSub($stocks, 'stock', function ($join) {
+        $join->on('products.id', '=', 'stock.product_id');
+    })
+    ->join('shops', 'products.shop_id', '=', 'shops.id')
+    ->where('shops.is_selling', true)
+    ->where('products.is_selling', true)
+    ->get();
+
+```
+
+参考：[Laravel11マニュアル](https://readouble.com/laravel/11.x/ja/queries.html)
+
+#### Error:Undefined property: stdClass::$category
+
+クエリビルダを使用したのでEloquantで取得していたカテゴリ―で上手く取れてないっぽい。
+それぞれjoinで紐づけてselect文で明示的に指定して対応。
+長い……
+
+```php:ImageController
+
+$products = DB::table('products')
+    ->joinSub($stocks, 'stock', function ($join) {
+        $join->on('products.id', '=', 'stock.product_id');
+    })
+    ->join('shops', 'products.shop_id', '=', 'shops.id')
+    ->join(
+        'secondary_categories',
+        'products.secondary_category_id',
+        '=',
+        'secondary_categories.id'
+    )
+    ->join('images as image1', 'products.image1', '=', 'image1.id')
+    ->join('images as image2', 'products.image2', '=', 'image2.id')
+    ->join('images as image3', 'products.image3', '=', 'image3.id')
+    ->join('images as image4', 'products.image4', '=', 'image4.id')
+
+    ->where('shops.is_selling', true)
+    ->where('products.is_selling', true)
+    ->select(
+        'products.id as id',
+        'products.name as name',
+        'products.price',
+        'products.sort_order as sort_order',
+        'products.information',
+        'secondary_categories.name as category',
+        'image1.filename as filename'
+    )
+    ->get();
+
+```
+
+view側も調整
