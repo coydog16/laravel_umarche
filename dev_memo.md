@@ -1501,3 +1501,83 @@ optionタグにforディレクティブを追加して9までの数字を表示�
 ```
 #### Error:syntax error, unexpected token "<"
 @forディレクティブ内で`{{　}}`を利用しているため、直接記述しなければならない。
+
+
+## カート機能作成
+
+数量のデータを持つため、Cartsというモデルを作りCartの中間テーブルで管理する。
+`php artisan make:model Cart -m`でモデルとマイグレーションを生成。
+
+### マイグレーションの作成
+
+ユーザーと商品の中間テーブルなので、user_idとproduct_idをそれぞれ取得。
+integerで数量のデータを追加。
+
+```php
+
+$table->foreignId('user_id')
+->constrained()
+->onUpdate('cascade')
+->onDelete('cascade');
+
+$table->foreignId('product_id')
+->constrained()
+->onUpdate('cascade')
+->onDelete('cascade');
+
+$table->integer('quantity');
+
+```
+>※foreignId:外国のID
+>外部のidと紐づけるメソッド。
+>このカラムは「誰のものなのか」を定義する。
+
+>※constrained：制約された、強制された
+>親テーブルが確実に存在しているかを確認する。
+>親テーブルに存在しないデータを入力した場合、外部キー制約違反エラーとなる。
+
+>※cascade：小滝、階段状の滝。
+>親テーブルのデータがupdateされたり、deleteされた場合、cartsテーブルのデータも自動的に更新、削除される。
+  
+
+`php artisan migrate`でSQLにデータテーブルを作成。
+
+
+### Cartモデルにfillableで変更可宣言
+
+```php:Cart.php
+
+protected $fillable = [ 
+    'user_id',
+    'product_id',
+    'quantity',
+];
+
+```
+
+>fillable:充填可能
+>変更を許可するフィールドを明示的に宣言するセキュリティ対策。
+>悪意あるユーザーが重要なフィールドを変更できないために設定する。
+
+### モデルのリレーション設定
+
+多対多のリレーションを設定する。
+
+関係性としては、`User - Cart - Product`。Cartを中間テーブルとしてUserとProductを外部キーでつなげる
+
+まずはUserモデルからカートに`belongsToMany`と`withPivot()`でリレーション。
+
+```php:User.php
+
+use App/Models/Product;
+
+public function cart()
+{
+    return $this->belongsToMany(Product::class 'carts') 
+    //belongsToMany()では、第2引数で中間テーブル名を指定。
+    ->withPivot('id', 'quantity');
+    //withPivotで必要な情報を取得。未設定の場合はforeignId()で指定したカラムのみ。
+}
+
+```
+
