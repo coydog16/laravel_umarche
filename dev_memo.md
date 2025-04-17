@@ -1082,7 +1082,7 @@ User/Authフォルダ内の全てのControllerのリダイレクト先を`dashbo
 ```
 
 
-# 2025/4/14
+# 2025/4/14　商品の詳細ページを作成（実装準備）
 
 ## 商品一覧のクエリ作成
 
@@ -1245,6 +1245,129 @@ public function show($id)
 `show.blade.php`を新規作成し、`index.blade.php`からリンクを張る。
 `<a href="{{ route('items.show', ['item' => $product->id]) }}">`
 
-view/user配下に`show.blade.php`を作成し、簡単にデザインを調整する
+view/user配下に`show.blade.php`を作成し、tailblocksを参考にhtmlをコピーして簡単にデザインを調整する
+
+```php:show.blade.php
+
+<div class="md:w-1/2 ml-4">
+    <h2 class="mb-4 text-sm title-font text-gray-500 tracking-widest">{{ $product->category->name }}</h2>
+    <h1 class="mb-4 text-gray-900 text-2xl title-font font-medium">{{ $product->name }}</h1>
+    <p class="mb-4 leading-relaxed">{{ $product->information }}</p>
+    <div class="flex  justify-around items-center mt-6">
+        <div>
+            <span class="title-font font-medium text-2xl text-gray-900">{{ number_format($product->price) }}</span><span class="text-sm text-gray-700">円（税込み）</span>  
+        </div>
+        <div class="flex ml-6 items-center">
+            <span class="mr-3">数量</span>
+            <div class="relative">
+                <select class="rounded border appearance-none border-gray-300 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 text-base pl-3 pr-10">
+                    <option>SM</option>
+                    <option>M</option>
+                    <option>L</option>
+                    <option>XL</option>
+                </select>
+            </div>
+        </div>
+    <button class="flex text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">カートに入れる</button>
+    </div>
+</div>
+
+```
+
+参考：[tailblocks](https://tailblocks.cc/)
 
 
+# 2025/4/15　商品詳細ページにカルーセルを実装。
+
+##　jsライブラリのSwiper.jsをインストール
+
+多機能でレスポンシブ対応は当然として、JQueryではなく生jsなところがポイント高い
+
+`swiper.js`を作成し使う機能を選択しつつ初期化
+
+```js:swiper
+
+// import Swiper JS
+import Swiper from 'swiper';
+// import Swiper styles
+import 'swiper/css';
+
+// core version + navigation, pagination modules:
+import Swiper from 'swiper';
+import { Navigation, Pagination } from 'swiper/modules';
+// import Swiper and modules styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
+const swiper = new Swiper('.swiper', { //初期化
+  // Optional parameters
+  // direction: 'vertical',　縦方向のスライドの設定なのでコメントアウト
+  loop: true,
+
+  // If we need pagination
+  pagination: {
+    el: '.swiper-pagination',
+  },
+
+  // Navigation arrows
+  navigation: {
+    nextEl: '.swiper-button-next',
+    prevEl: '.swiper-button-prev',
+  },
+
+  // And if we need scrollbar
+  scrollbar: {
+    el: '.swiper-scrollbar',
+  },
+});
+
+```
+
+`app.js`に`import './swiper';`の一文を追加。
+
+`swiper.css`を作成。`show.blade.php`にswiper公式サイトからhtmlを追加。
+
+nmp run devでコンパイル。
+
+```html:show.blade.php
+
+<!-- Slider main container -->
+<div class="swiper">
+  <!-- Additional required wrapper -->
+  <div class="swiper-wrapper">
+    <!-- Slides -->
+    <div class="swiper-slide">Slide 1</div>
+    <div class="swiper-slide">Slide 2</div>
+    <div class="swiper-slide">Slide 3</div>
+    ...
+  </div>
+  <!-- If we need pagination -->
+  <div class="swiper-pagination"></div>
+
+  <!-- If we need navigation buttons -->
+  <div class="swiper-button-prev"></div>
+  <div class="swiper-button-next"></div>
+
+  <!-- If we need scrollbar -->
+  <div class="swiper-scrollbar"></div>
+</div>
+
+```
+
+`<img src="{{ asset('storage/products/sample1.jpg') }}`でイメージファイルにパスを通す。
+
+#### Error
+
+参考にしたサイトで使っているSwiperのバージョンが古くて上手く動かず。
+
+Swiperの公式サイトを参考に構文を書き換えて、CSSを調整。
+
+参考：[Swiperインストール](https://swiperjs.com/get-started)
+
+#### Error：スクローラーが反応しない。
+
+スライドは出来たがスクローラーが反応しない。
+公式のinitにをscrollerがなかったので追記。(`swiper.js`の`modules: [Navigation, Pagination, Scrollbar],`)
+
+# 4/17
