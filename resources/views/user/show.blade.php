@@ -74,12 +74,11 @@
                                 <div class="flex ml-6 items-center">
                                     <span class="mr-3">数量</span>
                                     <div class="relative">
-                                        <select
+                                        <select name="quantity"
                                             class="rounded border appearance-none border-gray-300 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 text-base pl-3 pr-10">
-                                            <option>SM</option>
-                                            <option>M</option>
-                                            <option>L</option>
-                                            <option>XL</option>
+                                            @for ($i = 1; $i <= $quantity; $i++)
+                                                <option value="{{ $i }}">{{ $i }}</option>
+                                            @endfor
                                         </select>
                                     </div>
                                 </div>
@@ -109,7 +108,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- モーダルウィンドウ -->
     <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>

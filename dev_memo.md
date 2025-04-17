@@ -1426,10 +1426,78 @@ Swiperの公式サイトを参考に構文を書き換えて、CSSを調整。
 
 ### modalウィンドウでショップ情報が表示される機能を追加
 
-ショップのイメージ画像で使ったmicromodalから、htmlを拝借。
+ショップのイメージ画像で使ったmicromodalからhtmlを拝借し、商品詳細ページのviewファイルに張り付け手調整。
+
+```php:show.blade.php
+
+<div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
+    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+            <header class="modal__header">
+                <h2 class="text-xl text-gray-700 modal__title" id="modal-1-title">
+                    {{ $product->shop->name }}
+                </h2>
+                <button type="button" class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+            </header>
+            <main class="modal__content" id="modal-1-content">
+                <p>
+                    {{ $product->shop->information }}
+                </p>
+            </main>
+            <footer class="modal__footer">
+                <button type="button" class="modal__btn" data-micromodal-close
+                    aria-label="Close this dialog window">閉じる</button>
+            </footer>
+        </div>
+    </div>
+</div>
+
+```
+
 
 参考：[micromodal公式デモ](https://gist.github.com/ghosh/4f94cf497d7090359a5c9f81caf60699)
 
-内容を調整し、トリガーとなるボタンにモーダル起動用のコードを追記。
+トリガーとなるボタンにモーダル起動用のコードを追記。
 `data-micromodal-trigger="modal-1" href='javascript:;'`
 
+## 在庫を動的に表示できるようにする
+
+1～9までの数字で在庫表示する
+
+### Controllerの調整
+
+在庫数は`ProductController.php`で取得してたのでコピペ。
+if文で取得した数字が9より大きい場合は9で固定し、compactメソッドで`$quantity`もviewへ渡す。
+
+```php:ItemController
+
+$quantity = Stock::where('product_id', $product->id)
+->sum('quantity');
+
+if($quantity > 9)
+{
+    $quantity = 9;
+}
+
+return view('user.show', compact('product', 'quantity'));
+
+```
+
+### Viewの調整
+
+
+ポスト通信で在庫情報をデータベースへ保存する必要があるので
+一旦selectタグに`name="quantity"`で名前を付けておく。
+
+optionタグにforディレクティブを追加して9までの数字を表示。
+データベースに保存するためのvalueを$iの変数に入れて追加。
+
+```php:show.blade.php
+
+@for ($i = 1; $i <= {{ $quantity }}; $i++)
+    <option value="{{ $i }}">{{ $i }}</option>
+@endfor
+
+```
+#### Error:syntax error, unexpected token "<"
+@forディレクティブ内で`{{　}}`を利用しているため、直接記述しなければならない。
