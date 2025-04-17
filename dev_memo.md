@@ -1283,6 +1283,9 @@ view/user配下に`show.blade.php`を作成し、tailblocksを参考にhtmlを�
 
 多機能でレスポンシブ対応は当然として、JQueryではなく生jsなところがポイント高い
 
+
+### インストール
+
 `swiper.js`を作成し使う機能を選択しつつ初期化
 
 ```js:swiper
@@ -1370,4 +1373,63 @@ Swiperの公式サイトを参考に構文を書き換えて、CSSを調整。
 スライドは出来たがスクローラーが反応しない。
 公式のinitにをscrollerがなかったので追記。(`swiper.js`の`modules: [Navigation, Pagination, Scrollbar],`)
 
+解決！
+
+### コントローラーからの変数で画像表示
+
+画像があればファイルを表示して、なければ空のNotImageを表示したい。
+`show.blade.php`の画像ファイルの個所をif文に書き換え。
+
+```php:show.blade.php
+
+@if ($product->imageFirst->filename !== null)
+    <img src="{{ asset('storage/products/' . $product->imageFirst->filename) }}">
+@else
+    <img src="">
+@endif
+
+```
+
 # 4/17
+
+## 商品ページにショップの情報を追加
+
+商品ページに販売しているショップの詳細を追加
+
+### ShopSeederにダミーデータを追加
+
+`ShopSeeder`にfilenameでサンプル画像を取得するよう追記(`'filename' => 'sample1.jpg',`)
+適当に画像ファイルをDLして`storage/shops`に保存
+マイグレーションリフレッシュ。
+
+### view側にショップ情報を追加
+
+```php:show.blade.php
+
+<div>
+    <div class="border-t border-gray-400 my-8"></div>
+    <div class="mb-4 text-center">この商品を販売しているショップ</div>
+    <div class="mb-4 text-center">{{ $product->shop->name }}</div>
+    <div class="mb-4 text-center">
+        @if ($product->shop->filename !== null)
+            <img class="w-40 h-40 object-cover rounded-full mx-auto" src="{{ asset('storage/shops/' . $product->shop->filename) }}">
+        @else
+            <img src="">
+        @endif
+    </div>
+    <div class="mb-4 text-center"><button type="button"
+            class=" text-white bg-gray-400 border-0 py-2 px-6 focus:outline-none hover:bg-gray-500 rounded">ショップの詳細を見る</button>
+    </div>
+</div>
+
+```
+
+### modalウィンドウでショップ情報が表示される機能を追加
+
+ショップのイメージ画像で使ったmicromodalから、htmlを拝借。
+
+参考：[micromodal公式デモ](https://gist.github.com/ghosh/4f94cf497d7090359a5c9f81caf60699)
+
+内容を調整し、トリガーとなるボタンにモーダル起動用のコードを追記。
+`data-micromodal-trigger="modal-1" href='javascript:;'`
+
