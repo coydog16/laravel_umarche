@@ -6,15 +6,20 @@ use App\Http\Controllers\ComponentTestController;
 use App\Http\Controllers\LifeCycleTestController;
 use PHPUnit\Architecture\Services\ServiceContainer;
 use App\Http\Controllers\User\ItemController;
+use App\Http\Controllers\User\CartController;
 
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::middleware('auth:users')->group(function(){
-        Route::get('/', [ItemController::class,'index'])->name('user.items.index');
-        Route::get('show/{item}',[ItemController::class, 'show'])->name('items.show');
+Route::middleware('auth:users')->group(function () {
+    Route::get('/', [ItemController::class, 'index'])->name('user.items.index');
+    Route::get('show/{item}', [ItemController::class, 'show'])->name('items.show');
+});
+
+Route::prefix('carts')->middleware('auth:users')->group(function () {
+        Route::post('add', [CartController::class, 'add'])->name('carts.add');
     });
 
 // Route::get('/dashboard', function () {
@@ -31,4 +36,4 @@ Route::middleware('auth:users')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/userAuth.php';
+require __DIR__ . '/userAuth.php';

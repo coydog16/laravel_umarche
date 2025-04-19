@@ -1082,7 +1082,7 @@ User/Authフォルダ内の全てのControllerのリダイレクト先を`dashbo
 ```
 
 
-# 2025/4/14　商品の詳細ページを作成（実装準備）
+# 2025/4/14　商品の詳細ページの雛形を作成
 
 ## 商品一覧のクエリ作成
 
@@ -1277,7 +1277,7 @@ view/user配下に`show.blade.php`を作成し、tailblocksを参考にhtmlを�
 参考：[tailblocks](https://tailblocks.cc/)
 
 
-# 2025/4/15　商品詳細ページにカルーセルを実装。
+# 2025/4/15　商品詳細ページにSwiperを使ってカルーセルを実装。
 
 ##　jsライブラリのSwiper.jsをインストール
 
@@ -1390,11 +1390,12 @@ Swiperの公式サイトを参考に構文を書き換えて、CSSを調整。
 
 ```
 
-# 4/17
+# 2025/4/17　商品詳細ページのショップ情報とカート機能作成。
 
 ## 商品ページにショップの情報を追加
 
-商品ページに販売しているショップの詳細を追加
+商品ページに販売しているショップの詳細を追加。
+viewにショップの画像や説明を追加するほか、modalウィンドウでショップ情報の詳細情報が表示される機能を追加する。
 
 ### ShopSeederにダミーデータを追加
 
@@ -1559,13 +1560,13 @@ protected $fillable = [
 >変更を許可するフィールドを明示的に宣言するセキュリティ対策。
 >悪意あるユーザーが重要なフィールドを変更できないために設定する。
 
-### モデルのリレーション設定
+### Cartモデルのリレーション設定
 
 多対多のリレーションを設定する。
 
 関係性としては、`User - Cart - Product`。Cartを中間テーブルとしてUserとProductを外部キーでつなげる
 
-まずはUserモデルからカートに`belongsToMany`と`withPivot()`でリレーション。
+まずはUserモデルからcartモデルを経由してProductモデルに`belongsToMany`と`withPivot()`でリレーション。
 
 ```php:User.php
 
@@ -1580,4 +1581,116 @@ public function cart()
 }
 
 ```
+
+同じ要領でProductモデルからもUserモデルにつなげる
+
+```php:Product.php
+
+use App\Models\User;
+
+public function user()
+{
+    return $this->belongsToMany(User::class, 'carts')
+        ->withPivot(['id', 'quantity']);
+}
+
+```
+
+
+
+# 2025/4/19　カートに追加機能
+
+## コントローラーを生成してviewからデータを渡す。
+
+### web.phpへルート情報を追加
+
+prefixでcartを設定し、post通信を行う。
+
+```php:web.php
+
+Route::prefix('cart')->middleware('auth:users')->group(function () {
+        Route::post('add', [CartController::class, 'add'])->name('carts.add');
+    });
+
+```
+
+### コントローラーを作成してPOSTをルーティング
+
+artisanコマンドでCartControllerを作成。
+`php artisan make:controller User/Controller`で`CartController.php`が生成される。
+
+viewファイルの数量と商品IDのデータベースに渡すためformタグを追加。
+
+```php:show.plade.php
+
+<form method="post" action="{{ route('carts.add') }}">
+    @csrf
+    <input type="hidden" name="product_id" value="{{ $product->id }}"> //商品idはユーザーに見せないためhiddenで。
+</form>
+
+```
+
+この状態でコントローラーに値が渡るはずなので一旦dd()。
+カートに入れるボタンを押したときにPOST通信でパラメーターが送信されているかを確認。
+
+```php:dd($request)
+
+"_token" => "rbvJ5GOKQjrsXVSJ9zEbgMloNX1UOM8GPOCBYqb3"
+"quantity" => "1"
+"product_id" => "101"
+
+```
+
+OK、問題なさそう。
+
+## カートに追加する保存処理を作成
+
+### コントローラーにadd()メソッドを作成
+
+Cartクラスでwhereメソッドを利用して条件を絞る。
+```php:Cartクラスのwhereメソッド
+
+Cart::where('product_id', $request->product_id) //リクエストで渡されたidと同じidを取得。
+    ->where('user_id', Auth::id()) // ログインしているユーザーと同じuser_idを取得。
+    ->first(); //条件に一致した値の中から最初の一件だけを取得するget()の親戚
+
+
+```
+
+>>※whereメソッド
+>>3つの引数を受け取り値の絞り込みを行う。
+>>where(カラム名、演算子、カラムの値と比較する値)
+>>演算子が'='の場合は省略することができる。
+
+
+>>※get()とfirst()の違い
+>>get() → 冷蔵庫の中身を全部取り出して「コーラが4本あります」と答える
+>>first() → 冷蔵庫を開けて、コーラを見つけたらすぐに「あります」と答える
+
+if文の条件分岐を追記して保存処理を書く
+
+```php:カートテーブルに追加もしくは新規作成の処理
+
+        if ($itemInCart) {
+            // カートに商品が既に存在する場合、数量を更新
+            $itemInCart->quantity += $request->quantity; // リクエストから取得した数量を加算
+            $itemInCart->save(); //saveとしないと保存されない
+        } else {
+            // カートに商品が存在しない場合、カラムを作成
+            Cart::create([
+                'product_id' => $request->product_id,
+                'user_id' => Auth::id(),
+                'quantity' => $request->quantity,
+            ]);
+        }
+
+```
+
+`dd()`でのテストと、phpMyAdminにてcartsテーブルにカラムが新規作成されていることと数量が追加されていることを確認。
+
+
+## カート画面のview側を作成
+
+あああ
+
 
