@@ -1865,4 +1865,5 @@ GET 127.0.0.1:8000
 しかし、`web.php`では引数を渡す設定になっていない事が原因。
 `Route::post('delete', [CartController::class, 'delete'])->name('cart.delete');`
 
-`post(delet/{item})`とすることで引数を
+`post('delet/{item}')`とすることで引数を指定し解決。
+
