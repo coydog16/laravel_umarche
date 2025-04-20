@@ -1792,11 +1792,11 @@ Illuminate\Database\Eloquent\Collection {#1636 ▼ // app\Http\Controllers\User\
 
 ```
 
-# 2025/4/20　カート機能の続きとStripeで決済機能を付ける
+# 2025/4/20　カート機能の続きとStripeで決済機能を実装する
 
 カートCRUDを完成させる
 
-## 削除機能を付ける
+## カート一覧の削除機能を実装する
 
 削除のルーティングとコントローラーを調整して、削除ボタンを作る。
 ボタンはheroiconでアイコンとする
@@ -1867,3 +1867,42 @@ GET 127.0.0.1:8000
 
 `post('delet/{item}')`とすることで引数を指定し解決。
 
+
+## Stripeで決済機能を実装する
+
+>Stripe概要
+>API方決済ライブラリ　決済が行われると手数料3.6%
+>テストモードあり
+>APIキー発行には会員登録が必要
+
+参考：[Stripe公式](https://stripe.com/)
+
+### APIキーを取得しコンポーザーでライブラリをインストール
+
+会員登録を済ませ、APIの公開キーとシークレットキーを`.env`の最下部にコピペに。
+
+```php:.env
+
+STRIPE_PUBLIC_KEY="ここに公開キー"
+STRIPE_SECRET_KEY="ここにシークレットキー"
+
+```
+
+`composer require stripe/stripe.php`でライブラリをインストール。
+`composer.json`で`"stripe/stripe-php": "*"`の記述を確認。
+
+### ルーティング設定
+
+`web.php`にルーティング情報を追加。
+`Route::get('checkout', [CartController::class, 'checkout'])->name('cart.checkout');`
+
+`CartController.php`に`checkout()`を記述。
+購入ボタンをクリックしたら処理が走るようにするため、商品情報をすべて取得してStripeへ渡す。
+
+```php:cartController.php
+
+
+
+```
+
+参考[Stripeドキュメント](https://docs.stripe.com/api/checkout/sessions/create)
