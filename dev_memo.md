@@ -535,7 +535,6 @@ dir public
 -プロダクトテーブル
 -プロダクトのダミーデータを生成
 
-----------------------------------------------
 
 # 2025/4/12
 
@@ -1614,6 +1613,10 @@ Route::prefix('cart')->middleware('auth:users')->group(function () {
 
 ```
 
+>>※group()
+>>()で囲った全てのRoute情報に適用させる。
+>>今回はprefixでルート情報の頭に必ずcartを付ける事と、middlewareでユーザーがログインしているかを確認している。
+
 ### コントローラーを作成してPOSTをルーティング
 
 artisanコマンドでCartControllerを作成。
@@ -1691,6 +1694,175 @@ if文の条件分岐を追記して保存処理を書く
 
 ## カート画面のview側を作成
 
-あああ
+カート画面では、ユーザーが追加した商品と合計金額を表示する。
 
+### カートのindexにRouteをつなげる
 
+`web.php`にget()でindexのRouto情報を追記
+
+```php:web.php
+
+Route::get('/', [CartController::class, 'index'])->name('cart.index');
+
+```
+
+コントローラーに処理が渡るので、CartControllerのindex()メソッドでget()の処理を追記
+
+```php:CartController.php
+
+public function index()
+{
+    $user = User::findOrFail(Auth::id()); // Auth::id()は、現在認証されているユーザーのIDを取得
+    $products = $user->cart; // ユーザーのカート情報を取得
+    $totalPrice = 0; // 合計金額を初期化
+
+    foreach($products as $product) {
+        $totalPrice += $product->price * $product->pivot->quantity; // 商品の価格と数量を掛け算して合計金額を計算
+    }
+
+    dd($products, $totalPrice); // viewを作っていないので、一旦ddで確認。渡ってきたproductsの情報と合計金額を表示
+
+    return view('user.cart.index', compact('products', 'totalPrice')); // カート情報をビューに渡す
+}
+
+```
+
+コントローラーのadd()メソッドからredirectでindexへ処理を飛ばすようにする。
+
+```php:CartController.phpのadd()
+
+return redirect()->route('cart.index');
+
+```
+
+こうすることで`show.blade.php`のカートに追加ボタンをクリックしたら
+`add()`の処理を実行した後に`index()`に処理が移るようになる。
+
+```dd($products, $totalPrice);の表示結果
+
+Illuminate\Database\Eloquent\Collection {#1636 ▼ // app\Http\Controllers\User\CartController.php:23
+  #items: array:2 [▼
+    0 => App\Models\Product {#1643 ▶}
+    1 => App\Models\Product {#1654 ▶}
+  ]
+  #escapeWhenCastingToString: false
+}
+
+3263522 // app\Http\Controllers\User\CartController.php:23
+
+```
+
+コレクションでそれぞれの商品と合計金額が取得できていることが分かる。
+
+### Viewファイル作成
+
+カート内を表示させる
+
+`cart.blade.php`を作成し、中身を調整。
+
+画像、商品名、値段、合計金額、削除ボタンを横並びで表示させる。
+
+```php:cart.blade.php
+
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    @if (count($products) > 0) //取得したproductsが1以上、つまり商品が入っているかどうかを確認
+                        @foreach ($products as $product) //コレクションから順にひとつずつ取得
+                            <div class="md:flex md:items-center mb-2">
+                                <div class="md:w-3/12">
+                                    @if ($product->imageFirst->filename !== null)
+                                        <img src="{{ asset('storage/products/' . $product->imageFirst->filename) }}">
+                                    @else
+                                        <img src="">
+                                    @endif
+                                </div>
+                                <div class="md:w-4/12 md:ml-2">{{ $product->name }}</div>
+                                <div class="md:w-3/12 flex">
+                                    <div>{{ $product->pivot->quantity }}</div>
+                                    <div>{{ number_format($product->pivot->quantity * $product->price) }}<span
+                                            class="text-sm text-gray-700">円（税込）</span></div>
+                                </div>
+                                <div>合計金額</div>
+                                <div class="md:w-2/12"><button>削除</button></div>
+                            </div>
+                        @endforeach
+                    @else
+                        カートに商品が入っていません。
+                    @endif
+                </div>
+
+```
+
+# 2025/4/20　カート機能の続きとStripeで決済機能を付ける
+
+カートCRUDを完成させる
+
+## 削除機能を付ける
+
+削除のルーティングとコントローラーを調整して、削除ボタンを作る。
+ボタンはheroiconでアイコンとする
+
+### ルーティングとコントローラーの調整
+
+`web.php`にルート情報を追記
+
+```php:web.php
+Route::post('delete', [CartController::class, 'delete'])->name('cart.delete');
+```
+
+`CartController.php`に`delete()`メソッドを追記
+
+```php:CartController
+
+public function delete($id) //リクエストで商品IDを取得
+{
+    Cart::where('product_id', $id) // リクエストから取得した商品IDとproduct_idが一致しているか確認。
+        ->where('user_id', Auth::id()) // ユーザーでログインしているかを確認。
+        ->delete(); //削除処理を実施
+
+    return redirect()->route('user.cart.index');
+}
+
+```
+
+### herosiconで削除ボタンを作成
+
+[heroicon](https://heroicons.com/)からsvgでボタンを拝借
+
+```php:cart.blade.php
+
+<form method="POST" action="{{ route('user.cart.delete', ['item' => $product->id]) }}">
+    @csrf
+    <div class="md:w-2/12 flex">
+        <button type="submit">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+        </svg>
+        </button>
+    </div>
+</form>
+
+```
+
+#### Error:Route [user.cart.delete] not defined.
+
+user.cart.deleteのルーティング情報が見つからない。
+
+`web.php`では`'cart.delete'`で定義していたが、`cart.blade.php`の方で`'user.cart.delete'`と記述している。
+`cart.blade.php`の方を`'cart.delete'`と修正し解決
+
+#### Error:引数が渡されていない
+
+```Error
+
+Missing required parameter for [Route: cart.delete] [URI: cart/delete/{id}] [Missing parameter: id].
+GET 127.0.0.1:8000
+
+```
+
+`cart.blade.php`でitemという名前で商品IDのパラメータが渡される設定になっている。
+`route('cart.delete', ['item' => $product->id])`
+
+しかし、`web.php`では引数を渡す設定になっていない事が原因。
+`Route::post('delete', [CartController::class, 'delete'])->name('cart.delete');`
+
+`post(delet/{item})`とすることで引数を
