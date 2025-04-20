@@ -1898,11 +1898,84 @@ STRIPE_SECRET_KEY="ここにシークレットキー"
 
 `CartController.php`に`checkout()`を記述。
 購入ボタンをクリックしたら処理が走るようにするため、商品情報をすべて取得してStripeへ渡す。
+Stripeのキーは[Stripeドキュメント](https://docs.stripe.com/api/checkout/sessions/create)を参照。
 
-```php:cartController.php
+```php:CartController.php
 
+public function checkout()
+{
+    $user = User::findOrFail(Auth::id()); // Auth::id()は、現在認証されているユーザーのIDを取得
+    $products = $user->cart; // ユーザーのカート情報を取得
+    // dd($products);
 
+    $lineItems = []; // Stripeへ渡すための配列を初期化
+    foreach($products as $product) { //商品情報を取得して$lineItemsに格納
+        $lineItem = [
+            'price_data' => [   //価格情報
+                'currency' => 'jpy', // 通貨を指定 
+                'product_data' => [ // 商品情報
+                    'name' => $product->name,
+                    'images' => [$product->imageFirst->filename],  //Stripe APIの仕様に準拠し配列指定
+                    'description' => $product->information,
+                ],
+                'unit_amount' => $product->price, // 商品の価格
+            ],
+            'quantity' => $product->pivot->quantity, // カートに入っている数量
+        ];
+        array_push($lineItems, $lineItem); // $lineItemsに追加
+    }
+
+    dd($lineItems); // デバッグ用に$lineItemsを表示
+
+}
 
 ```
 
-参考[Stripeドキュメント](https://docs.stripe.com/api/checkout/sessions/create)
+### checkoutのセッションを作成する
+
+[StripeDocs](https://docs.stripe.com/checkout/quickstart?lang=php)を参考にチェックアウトのセッションを作成する
+
+```php:cartController.php
+
+\Stripe\Stripe::setApiKey(env('STRIPE_SECRET_KEY'));　//秘密鍵
+
+$session = \Stripe\Checkout\Session::create([
+    'payment_method_types' => ['card'], //　カードのみの支払い
+    'line_items' => $lineItems, // 商品情報を追加
+    'mode' => 'payment', // 一回のみの支払い
+    'success_url' => route('user.items.success'), //成功時のリダイレクト先
+    'cancel_url' => route('user.cart.cancel'),  //失敗時のリダイレクト先
+]);
+
+$publicKey = env('STRIPE_PUBLIC_KEY');　//公開鍵
+
+return view('user.checkout', compact('session', 'publicKey'));　//決済ページのview
+
+```
+
+### Stripe前の在庫処理
+
+決済前に在庫を確認し、購入希望数に対して在庫が足りなかった場合にはカートに戻す処理を実装する
+
+```php:CartController
+
+$quantity = $product->pivot->quantity; // カートに入っている数量
+$stock = Stock::where('product_id', $product->id)->sum('quantity'); // 商品IDを指定して在庫情報を取得
+
+if (!$stock || $stock < $quantity) {
+    // 在庫がnullかもしくは購入数よりも少ない場合はカートページへリダイレクト。
+    return redirect()->route('user.cart.index')->with('error', '在庫が不足しています。');
+}else {
+    //Stripeへ商品情報を渡す処理
+}
+
+// 処理が通ったらStockテーブルの数を減らす。
+foreach ($products as $product) { 
+    Stock::create([
+        'product_id' => $product->id,
+        'type' => Common::PRODUCT_LIST['reduce'],
+        'quantity' => $product->pivot->quantity * -1
+    ]);
+}
+
+```

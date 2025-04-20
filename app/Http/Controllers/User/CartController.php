@@ -4,8 +4,10 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Constants\Common;
 use App\Models\Cart;
 use App\Models\User;
+use App\Models\Stock;
 use Illuminate\Support\Facades\Auth; // userIDを取得するためにAuthファサードを使用
 
 class CartController extends Controller
@@ -17,7 +19,7 @@ class CartController extends Controller
         $products = $user->cart; // ユーザーのカート情報を取得
         $totalPrice = 0; // 合計金額を初期化
 
-        foreach($products as $product) {
+        foreach ($products as $product) {
             $totalPrice += $product->price * $product->pivot->quantity; // 商品の価格と数量を掛け算して合計金額を計算
         }
 
@@ -42,7 +44,7 @@ class CartController extends Controller
                 'quantity' => $request->quantity,
             ]);
         }
-        
+
         return redirect()->route('user.cart.index');
     }
 
@@ -62,22 +64,41 @@ class CartController extends Controller
         // dd($products);
 
         $lineItems = []; // Stripeへ渡すための配列を初期化
-        foreach($products as $product) { //商品情報を取得して$lineItemsに格納
-            $lineItem = [
-                'price_data' => [
-                    'currency' => 'jpy', // 通貨を指定
-                    'product_data' => [
-                        'name' => $product->name,
-                        'images' => [$product->imageFirst->filename], // 商品の画像URL
-                        'description' => $product->information,
+        foreach ($products as $product) { //商品情報を取得して$lineItemsに格納
+            $quantity = $product->pivot->quantity; // カートに入っている数量
+            $stock = Stock::where('product_id', $product->id)->sum('quantity'); // 商品IDを指定して在庫情報を取得
+
+            if (!$stock || $stock < $quantity) {
+                return redirect()->route('user.cart.index')->with('error', '在庫が不足しています。');
+            }else {
+                $lineItem = [
+                    'price_data' => [
+                        'currency' => 'jpy', // 通貨を指定
+                        'product_data' => [
+                            'name' => $product->name,
+                            'images' => [$product->imageFirst->filename], // 商品の画像URL
+                            'description' => $product->information,
+                        ],
+                        'unit_amount' => $product->price, // 商品の価格
                     ],
-                    'unit_amount' => $product->price, // 商品の価格
-                ],
-                'quantity' => $product->pivot->quantity, // カートに入っている数量
-            ];
-            array_push($lineItems, $lineItem); // $lineItemsに追加
+                    'quantity' => $product->pivot->quantity, // カートに入っている数量
+                ];
+
+                array_push($lineItems, $lineItem); // $lineItemsに追加
+            }
+
         }
         // dd($lineItems); 
+
+        foreach ($products as $product) { 
+            Stock::create([
+                'product_id' => $product->id,
+                'type' => Common::PRODUCT_LIST['reduce'],
+                'quantity' => $product->pivot->quantity * -1
+            ]);
+        }
+
+        dd('test');
 
         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
 
@@ -92,6 +113,5 @@ class CartController extends Controller
         $publicKey = env('STRIPE_PUBLIC_KEY');
 
         return view('user.checkout', compact('session', 'publicKey'));
-
     }
 }
