@@ -23,7 +23,7 @@
         @elseif (\Illuminate\Support\Facades\Request::is('admin*'))
             @include('layouts.admin-navigation')
         @else
-            @include('layouts.navigation')
+            @include('layouts.user-navigation')
         @endif
 
         <!-- Page Heading -->

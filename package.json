@@ -17,6 +17,8 @@
         "vite": "^6.0.11"
     },
     "dependencies": {
-        "create-vite": "^6.3.1"
+        "create-vite": "^6.3.1",
+        "micromodal": "^0.6.1",
+        "swiper": "^11.2.6"
     }
 }

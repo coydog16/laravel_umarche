@@ -41,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__)) // Laravelのディレ
             return $request->expectsJson() ? null : route('login');
         });
     })
+
     
     ->withExceptions(function (Exceptions $exceptions) { //例外処理を設定
     })->create(); //Laravelスタート
