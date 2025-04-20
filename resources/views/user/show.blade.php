@@ -73,7 +73,7 @@
                                 </div>
                                 <form method="post" action="{{ route('cart.add') }}">
                                     @csrf
-                                    <div class="flex ml-6 items-center">
+                                    <div class="flex ml-6 py-2 items-center">
                                         <span class="mr-3">数量</span>
                                         <div class="relative">
                                             <select name="quantity"
@@ -85,7 +85,7 @@
                                         </div>
                                     </div>
                                     <button
-                                        class="flex text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">カートに入れる</button>
+                                        class="flex ml-auto text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">カートに入れる</button>
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 </form>
                             </div>

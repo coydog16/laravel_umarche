@@ -1979,3 +1979,72 @@ foreach ($products as $product) {
 }
 
 ```
+`phpMyAdmin`でt_stockテーブルにマイナスの在庫が登録されていることを確認。
+
+### viewに購入ボタンを実装
+
+合計金額と購入するボタンを実装する。
+
+まずはview側にボタンを作成。
+
+```php:cart.blade.php
+
+<div class="my-2">
+    <div><span class="text-sm text-gray-700">小計：</span>{{ number_format($totalPrice) }}<span class="text-sm text-gray-700">円（税込）</span></div>
+</div>
+<div>
+    <button onclick="location.href='{{ route('cart.checkout') }}'" class="flex ml-auto text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">
+        購入する
+    </button>
+</div>
+
+
+```
+
+ボタンをクリックしたらStripeの決済画面にリダイレクトする処理を書く
+viewに`checkout.blade.php`を作成し以下を記述。
+
+```php:checkout.blade.php
+<p>決済ページへリダイレクトします</p>   // ページが一瞬表示されるので一応
+
+<script src="https://js.stripe.com/v3/"></script>   // stripeのスクリプトを読み込む
+
+
+<script>
+    //  コントローラーから取得した情報でStripeへリダイレクト
+    const publicKey = '{{ $publicKey }}'
+    const stripe = Stripe(publicKey)
+
+    window.onload = function() {
+        stripe.redirectToCheckout({
+            sessionId: '{{ $session->id }}'
+        }).then(function(result) {
+            window.location.href = '{{ route('user.cart.index') }}'
+        })
+    }
+</script>
+
+```
+
+最後にダミーカードを使ってテスト。
+
+>>試してみる
+>>支払いボタンをクリックして支払いを完了します。指定した戻り先ページにリダイレクトされます。
+
+>>戻り先ページが表示され、ダッシュボードで成功した支払いの一覧に支払いが表示されれば、実装は正常に機能しています。以下のテストカードを使用し、支払いをシミュレーションします。
+
+>>支払いは成功します
+
+>>4242 4242 4242 4242
+>>支払いには認証が必要です
+
+>>4000 0025 0000 3155
+>>支払いが拒否されました
+
+
+[Stripeダッシュボード](https://dashboard.stripe.com/test/dashboard)の取引欄から決済が成功していることを確認できる。
+
+### 決済後にカート内の在庫を削除する
+
+
+

@@ -59,6 +59,7 @@ class CartController extends Controller
 
     public function checkout()
     {
+
         $user = User::findOrFail(Auth::id()); // Auth::id()は、現在認証されているユーザーのIDを取得
         $products = $user->cart; // ユーザーのカート情報を取得
         // dd($products);
@@ -70,7 +71,7 @@ class CartController extends Controller
 
             if (!$stock || $stock < $quantity) {
                 return redirect()->route('user.cart.index')->with('error', '在庫が不足しています。');
-            }else {
+            } else {
                 $lineItem = [
                     'price_data' => [
                         'currency' => 'jpy', // 通貨を指定
@@ -86,11 +87,10 @@ class CartController extends Controller
 
                 array_push($lineItems, $lineItem); // $lineItemsに追加
             }
-
         }
         // dd($lineItems); 
 
-        foreach ($products as $product) { 
+        foreach ($products as $product) {
             Stock::create([
                 'product_id' => $product->id,
                 'type' => Common::PRODUCT_LIST['reduce'],
@@ -98,7 +98,7 @@ class CartController extends Controller
             ]);
         }
 
-        dd('test');
+        // dd('test');
 
         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
 
@@ -106,12 +106,19 @@ class CartController extends Controller
             'payment_method_types' => ['card'],
             'line_items' => $lineItems,
             'mode' => 'payment',
-            'success_url' => route('user.items.success'),
-            'cancel_url' => route('user.cart.cancel'),
+            'success_url' => route('cart.success'),
+            'cancel_url' => route('user.cart.index'),
         ]);
 
         $publicKey = env('STRIPE_PUBLIC_KEY');
 
         return view('user.checkout', compact('session', 'publicKey'));
+    }
+
+    public function success()
+    {
+        Cart::where('user_id', Auth::id())->delete(); // カートの中身を削除
+
+        return redirect()->route('user.items.index');
     }
 }
