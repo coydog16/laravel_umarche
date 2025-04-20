@@ -1981,7 +1981,7 @@ foreach ($products as $product) {
 ```
 `phpMyAdmin`でt_stockテーブルにマイナスの在庫が登録されていることを確認。
 
-### viewに購入ボタンを実装
+### viewに購入ボタンを実装して決済ができるようにする
 
 合計金額と購入するボタンを実装する。
 
@@ -2046,5 +2046,56 @@ viewに`checkout.blade.php`を作成し以下を記述。
 
 ### 決済後にカート内の在庫を削除する
 
+決済後もカートに商品が残ったままになってしまうので、success()で削除処理を書く
 
+`web.php`にルート情報を追加し、successメソッドを作成する
+`Route::get('success', [CartController::class, 'success'])->name('cart.success');`
 
+`CartController.php`のStripeセッションで決済成功後のルートを追加したルートに指定。
+`'success_url' => route('cart.success'),`
+
+`CartController.php`にsuccessメソッドを追記
+
+```php:CartController.php
+
+public function success()
+{
+    Cart::where('user_id', Auth::id())->delete(); // カートの中身を削除
+
+    return redirect()->route('user.items.index');
+}
+
+```
+
+これで決済完了後に`success()`に渡り処理が走ってから`user.items.index`にリダイレクトするようになる。
+
+### 決済失敗後に在庫を戻す処理を書く
+
+`web.php`にルート情報を追加し、cancelメソッドを作成する
+`Route::get('cancel', [CartController::class, 'cancel'])->name('cart.cancel');`
+
+`CartController.php`のStripeセッションで決済成功後のルートを追加したルートに指定。
+`'cancel_url' => route('cart.cancel'),`
+
+`CartController.php`にcalcelメソッドを追記
+
+```php:CartController.php
+
+public function cancel()
+{
+    $user = User::findOrFail(Auth::id()); // Auth::id()は、現在認証されているユーザーのIDを取得
+
+    foreach ($user->cart as $product) {
+        Stock::create([
+            'product_id' => $product->id,
+            'type' => Common::PRODUCT_LIST['add'],
+            'quantity' => $product->pivot->quantity
+        ]);
+    }
+
+    return redirect()->route('user.cart.index')->with('error', '決済がキャンセルされました。'); // カートの中身を戻す
+}
+
+```
+
+これで決済をキャンセルした場合に`cancel()`に渡り処理が走ってから`user.cart.index`にリダイレクトするようになる。

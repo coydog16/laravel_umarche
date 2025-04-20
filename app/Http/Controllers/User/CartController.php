@@ -88,8 +88,9 @@ class CartController extends Controller
                 array_push($lineItems, $lineItem); // $lineItemsに追加
             }
         }
-        // dd($lineItems); 
+        // dd($lineItems);
 
+        // 在庫情報を更新
         foreach ($products as $product) {
             Stock::create([
                 'product_id' => $product->id,
@@ -107,7 +108,7 @@ class CartController extends Controller
             'line_items' => $lineItems,
             'mode' => 'payment',
             'success_url' => route('cart.success'),
-            'cancel_url' => route('user.cart.index'),
+            'cancel_url' => route('cart.cancel'),
         ]);
 
         $publicKey = env('STRIPE_PUBLIC_KEY');
@@ -120,5 +121,21 @@ class CartController extends Controller
         Cart::where('user_id', Auth::id())->delete(); // カートの中身を削除
 
         return redirect()->route('user.items.index');
+    }
+
+    public function cancel()
+    {
+        $user = User::findOrFail(Auth::id()); // Auth::id()は、現在認証されているユーザーのIDを取得
+        
+        // 在庫情報を更新
+        foreach ($user->cart as $product) {
+            Stock::create([
+                'product_id' => $product->id,
+                'type' => Common::PRODUCT_LIST['add'],
+                'quantity' => $product->pivot->quantity
+            ]);
+        }
+
+        return redirect()->route('user.cart.index')->with('error', '決済がキャンセルされました。'); // カートの中身を削除
     }
 }
